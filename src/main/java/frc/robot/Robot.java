@@ -48,8 +48,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    m_leftMotor = new WPI_VictorSPX(5);
-    m_rightMotor = new WPI_VictorSPX(8);
+    m_leftMotor = new WPI_VictorSPX(6);
+    m_rightMotor = new WPI_VictorSPX(9);
     m_robotDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
     m_stick = new Joystick(0);
     ahrs = new AHRS(SPI.Port.kMXP);
@@ -58,6 +58,8 @@ public class Robot extends TimedRobot {
     m_pidController.setSetpoint(90.0);
 m_pidController2.setSetpoint(0.0);
   }
+
+  
 
 //Conduire avec 'arcade drive'
   @Override
