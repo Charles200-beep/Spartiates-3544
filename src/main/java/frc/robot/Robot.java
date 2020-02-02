@@ -17,15 +17,25 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.controller.PIDController;
 
 //Définir les composantes
 public class Robot extends TimedRobot {
-  private final WPI_VictorSPX m_leftMotor = new WPI_VictorSPX(5);
-  private final WPI_VictorSPX m_rightMotor = new WPI_VictorSPX(8);
-  private final DifferentialDrive m_robotDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
-  private final Joystick m_stick = new Joystick(0);
+  private PIDController m_pidController;
+  private PIDController m_pidController2;
+  private WPI_VictorSPX m_leftMotor;
+  private WPI_VictorSPX m_rightMotor;
+  private DifferentialDrive m_robotDrive;
+  private Joystick m_stick;
   
- AHRS ahrs = new AHRS(SPI.Port.kMXP); 
+  private AHRS ahrs; 
+
+  private static final double kP = -.075;
+  private static final double kP2 = -.075;
+  private static final double kI = -0.00;
+  private static final double kD = -0.0;
+  private static final double kD2 = -0.0;
+
 
 
 
@@ -36,10 +46,24 @@ public class Robot extends TimedRobot {
   NetworkTableEntry ty = table.getEntry("ty");
   NetworkTableEntry ta = table.getEntry("ta");
 
+  @Override
+  public void robotInit() {
+    m_leftMotor = new WPI_VictorSPX(5);
+    m_rightMotor = new WPI_VictorSPX(8);
+    m_robotDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
+    m_stick = new Joystick(0);
+    ahrs = new AHRS(SPI.Port.kMXP);
+    m_pidController = new PIDController(kP, kI, kD, 0.02);
+    m_pidController2 = new PIDController(kP2, kI, kD2, 0.02);
+    m_pidController.setSetpoint(90.0);
+m_pidController2.setSetpoint(0.0);
+  }
+
 //Conduire avec 'arcade drive'
   @Override
   public void teleopPeriodic() {
-    m_robotDrive.arcadeDrive(m_stick.getY(), m_stick.getX());
+
+    m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
 
   //Lire les données du limelight
 double x = tx.getDouble(0.0);
@@ -49,12 +73,20 @@ double area = ta.getDouble(0.0);
 //Lire les données du navX
 double anglemesure = ahrs.getYaw();
 double vitesseangulaire = ahrs.getRawGyroX();
+
+double pidOut2 = m_pidController2.calculate(anglemesure);
+double pidOut = m_pidController.calculate(anglemesure);
+
+
 SmartDashboard.putNumber("anglemesure", anglemesure);
 SmartDashboard.putNumber("vitesseangulaire", vitesseangulaire);
 //Poster au smart dashboard les données du limelight
 SmartDashboard.putNumber("LimelightX", x);
 SmartDashboard.putNumber("LimelightY", y);
 SmartDashboard.putNumber("LimelightArea", area);
+
+SmartDashboard.putNumber("pidOut2", pidOut2);
+SmartDashboard.putNumber("pidOut", pidOut);
 
 //Système de controle automatique
 if (m_stick.getRawButton(1)) {
@@ -64,19 +96,21 @@ if (m_stick.getRawButton(1)) {
 //Tourner a un angle
 if (m_stick.getRawButton(2)) {
   ahrs.reset();
+//   m_pidController.setSetpoint(90.0);
+// m_pidController2.setSetpoint(0.0);
 
 } else {
   
 }
     
 if (m_stick.getRawButton(3)) {
-  double erreur = 90.0 - anglemesure;
-  m_robotDrive.arcadeDrive(0.0, -erreur*90);
-
-} else {
-  
+  //double erreur = 90.0 - anglemesure;
+  m_robotDrive.arcadeDrive(0.0, pidOut);
 }
 
+if (m_stick.getRawButton(4)) {
+  m_robotDrive.arcadeDrive(-0.7, pidOut2);
+}
 
 
 }//Fin du teleop.periodic
