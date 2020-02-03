@@ -46,6 +46,8 @@ public class Robot extends TimedRobot {
   NetworkTableEntry ty = table.getEntry("ty");
   NetworkTableEntry ta = table.getEntry("ta");
 
+
+//Commendes a éxécuter seulement au démarrage
   @Override
   public void robotInit() {
     m_leftMotor = new WPI_VictorSPX(6);
@@ -59,42 +61,48 @@ public class Robot extends TimedRobot {
 m_pidController2.setSetpoint(0.0);
   }
 
-  
 
 //Conduire avec 'arcade drive'
   @Override
   public void teleopPeriodic() {
-
     m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
 
-  //Lire les données du limelight
+
+//Lire les données du limelight
 double x = tx.getDouble(0.0);
 double y = ty.getDouble(0.0);
 double area = ta.getDouble(0.0);
+
 
 //Lire les données du navX
 double anglemesure = ahrs.getYaw();
 double vitesseangulaire = ahrs.getRawGyroX();
 
+
+//Calculer les vitesses (Lignes 110 à 117)
 double pidOut2 = m_pidController2.calculate(anglemesure);
 double pidOut = m_pidController.calculate(anglemesure);
 
 
+//Poster au Smart Dashboard les donées du navX
 SmartDashboard.putNumber("anglemesure", anglemesure);
 SmartDashboard.putNumber("vitesseangulaire", vitesseangulaire);
-//Poster au smart dashboard les données du limelight
+SmartDashboard.putNumber("pidOut2", pidOut2);
+SmartDashboard.putNumber("pidOut", pidOut);
+
+
+//Poster au Smart Dashboard les données du limelight
 SmartDashboard.putNumber("LimelightX", x);
 SmartDashboard.putNumber("LimelightY", y);
 SmartDashboard.putNumber("LimelightArea", area);
 
-SmartDashboard.putNumber("pidOut2", pidOut2);
-SmartDashboard.putNumber("pidOut", pidOut);
 
 //Système de controle automatique
 if (m_stick.getRawButton(1)) {
     m_robotDrive.arcadeDrive(-0.7, -x*0.04);
-  
   }
+
+
 //Tourner a un angle
 if (m_stick.getRawButton(2)) {
   ahrs.reset();
@@ -104,11 +112,13 @@ if (m_stick.getRawButton(2)) {
 } else {
   
 }
-    
+
+
 if (m_stick.getRawButton(3)) {
   //double erreur = 90.0 - anglemesure;
   m_robotDrive.arcadeDrive(0.0, pidOut);
 }
+
 
 if (m_stick.getRawButton(4)) {
   m_robotDrive.arcadeDrive(-0.7, pidOut2);
