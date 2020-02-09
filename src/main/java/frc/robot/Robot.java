@@ -8,6 +8,8 @@
 //Importer les librairies
 package frc.robot;
 import edu.wpi.first.wpilibj.Joystick;
+
+import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -18,6 +20,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.controller.PIDController;
+import edu.wpi.first.wpilibj.Compressor;
 
 //Définir les composantes
 public class Robot extends TimedRobot {
@@ -31,6 +34,7 @@ public class Robot extends TimedRobot {
   private WPI_VictorSPX m_rightMotor3;
   private DifferentialDrive m_robotDrive;
   private Joystick m_stick;
+  private Compressor c;
   
   private AHRS ahrs; 
 
@@ -52,8 +56,12 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    m_leftMotor2 = new WPI_VictorSPX(5);
     m_leftMotor = new WPI_VictorSPX(6);
+    m_leftMotor3 = new WPI_VictorSPX(7);
     m_rightMotor = new WPI_VictorSPX(9);
+    m_rightMotor2 = new WPI_VictorSPX(10);
+    m_rightMotor3 = new WPI_VictorSPX(8);
     m_robotDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
     m_stick = new Joystick(0);
     ahrs = new AHRS(SPI.Port.kMXP);
@@ -63,10 +71,14 @@ public class Robot extends TimedRobot {
     m_pidController2.setSetpoint(0.0);
     
    //Faire suivre les autres moteurs
-   m_leftMotor2.follow(m_leftMotor);
+    m_leftMotor2.follow(m_leftMotor);
     m_leftMotor3.follow(m_leftMotor);
     m_rightMotor2.follow(m_rightMotor);
-    m_rightMotor3.follow(m_rightMotor);
+   m_rightMotor3.follow(m_rightMotor);
+
+   c = new Compressor(0);
+
+   //m_rightMotor3.setInvertedMotor(RobotDrive.MotorType.kFrontLeft,true);
 
   }
 
@@ -75,6 +87,8 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
+
+    c.start();
 
 
   //Lire les données du limelight
