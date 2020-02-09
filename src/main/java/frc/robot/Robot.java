@@ -25,6 +25,10 @@ public class Robot extends TimedRobot {
   private PIDController m_pidController2;
   private WPI_VictorSPX m_leftMotor;
   private WPI_VictorSPX m_rightMotor;
+  private WPI_VictorSPX m_leftMotor2;
+  private WPI_VictorSPX m_leftMotor3;
+  private WPI_VictorSPX m_rightMotor2;
+  private WPI_VictorSPX m_rightMotor3;
   private DifferentialDrive m_robotDrive;
   private Joystick m_stick;
   
@@ -56,7 +60,7 @@ public class Robot extends TimedRobot {
     m_pidController = new PIDController(kP, kI, kD, 0.02);
     m_pidController2 = new PIDController(kP2, kI, kD2, 0.02);
     m_pidController.setSetpoint(90.0);
-m_pidController2.setSetpoint(0.0);
+    m_pidController2.setSetpoint(0.0);
   }
 
   
@@ -64,8 +68,13 @@ m_pidController2.setSetpoint(0.0);
 //Conduire avec 'arcade drive'
   @Override
   public void teleopPeriodic() {
-
     m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
+
+    //Faire suivre les autres moteurs
+    m_leftMotor2.follow(m_leftMotor);
+    m_leftMotor3.follow(m_leftMotor);
+    m_rightMotor2.follow(m_rightMotor);
+    m_rightMotor3.follow(m_rightMotor);
 
   //Lire les données du limelight
 double x = tx.getDouble(0.0);
