@@ -8,8 +8,6 @@
 //Importer les librairies
 package frc.robot;
 import edu.wpi.first.wpilibj.Joystick;
-
-import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -21,6 +19,7 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.Compressor;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 //Définir les composantes
 public class Robot extends TimedRobot {
@@ -35,9 +34,8 @@ public class Robot extends TimedRobot {
   private DifferentialDrive m_robotDrive;
   private Joystick m_stick;
   private Compressor c;
-  
+  private WPI_TalonFX m_test;
   private AHRS ahrs; 
-
   private static final double kP = -.075;
   private static final double kP2 = -.075;
   private static final double kI = -0.00;
@@ -56,6 +54,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    m_test = new WPI_TalonFX(01);
     m_leftMotor2 = new WPI_VictorSPX(5);
     m_leftMotor = new WPI_VictorSPX(6);
     m_leftMotor3 = new WPI_VictorSPX(7);
@@ -76,20 +75,32 @@ public class Robot extends TimedRobot {
     m_rightMotor2.follow(m_rightMotor);
    m_rightMotor3.follow(m_rightMotor);
 
-   c = new Compressor(0);
+   c = new Compressor(0);}
 
-   //m_rightMotor3.setInvertedMotor(RobotDrive.MotorType.kFrontLeft,true);
-
-  }
-
-    
+   
 //Conduire avec 'arcade drive'
   @Override
   public void teleopPeriodic() {
     m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
 
-    c.start();
+    //Allumer les compresseur
+    if (m_stick.getRawButton(5)) {
+      c.start();
+    } else {
+      c.stop();
+    }
 
+    // détecter la chaleur des moteurs
+   
+   double m_temperature = m_test.getTemperature();
+   //changer pour modifier le maximum de temperature
+  if (m_temperature>40) {
+    c.start();
+  } else {
+    c.stop();
+  }
+
+SmartDashboard.putNumber("m_temperature", m_temperature);
 
   //Lire les données du limelight
 double x = tx.getDouble(0.0);
