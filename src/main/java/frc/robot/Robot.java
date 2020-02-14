@@ -156,6 +156,7 @@ if (m_stick.getRawButton(4)) {
 }
 
 
+//partie autonome
 
 
 
