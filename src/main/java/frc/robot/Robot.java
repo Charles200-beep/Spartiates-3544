@@ -41,9 +41,9 @@ public class Robot extends TimedRobot {
   private static final double kI = -0.00;
   private static final double kD = -0.0;
   private static final double kD2 = -0.0;
-
-
-
+  boolean jamaisattetint = true;
+  boolean jamaisattetint2 = true;
+  boolean jamaisattetintroule = false;
 
 
 //Accéder aux données du limelight
@@ -68,7 +68,8 @@ public class Robot extends TimedRobot {
     m_pidController2 = new PIDController(kP2, kI, kD2, 0.02);
     m_pidController.setSetpoint(90.0);
     m_pidController2.setSetpoint(0.0);
-    
+    m_test.setSelectedSensorPosition(0);
+   
    //Faire suivre les autres moteurs
     m_leftMotor2.follow(m_leftMotor);
     m_leftMotor3.follow(m_leftMotor);
@@ -133,7 +134,7 @@ if (m_stick.getRawButton(1)) {
 //Tourner a un angle
 if (m_stick.getRawButton(2)) {
   ahrs.reset();
-//   m_pidController.setSetpoint(90.0);
+//faire
 // m_pidController2.setSetpoint(0.0);
 
 } else {
@@ -148,18 +149,61 @@ if (m_stick.getRawButton(3)) {
 if (m_stick.getRawButton(4)) {
   m_robotDrive.arcadeDrive(-0.7, pidOut2);
 }
+if (m_stick.getRawButton(7)) {
+  m_test.setSelectedSensorPosition(0);
 
+}
+  double m_distance = m_test.getSelectedSensorPosition();
+  SmartDashboard.putNumber("m_distance", m_distance);
 
 }//Fin du teleop.periodic
 
-
-}
-
+public void autonomousPeriodic() {
 
 //partie autonome
+double m_distance = m_test.getSelectedSensorPosition();
+SmartDashboard.putNumber("m_distance", m_distance);
+
+if (jamaisattetint) {
+  if (m_distance<5000) {
+  m_test.set(0.07);
+  
+} else {
+  m_test.set(0.0);
+  jamaisattetint = false;
+  jamaisattetintroule = true;
+}
+
+}
+if (jamaisattetint2 & jamaisattetintroule) {
+  if (m_distance>-5000) {
+    m_test.set(-0.07);
+    
+  } else {
+    m_test.set(0.0);
+    jamaisattetint2 = false;
+    
+  }
+}
+// if (m_distance>-60000) {
+//   m_test.set(-0.07);
+// } else {m_test.set(0.0);
+  
+// }
+
+//avancer
+
+
+//s'aligner et tire
 
 
 
+
+
+
+
+
+  }}
 
 
 
