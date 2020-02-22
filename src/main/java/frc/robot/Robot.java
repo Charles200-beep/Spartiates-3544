@@ -43,12 +43,81 @@ public class Robot extends TimedRobot {
   private static final double kI = -0.00;
   private static final double kD = -0.0;
   private static final double kD2 = -0.0;
+<<<<<<< Updated upstream
 
 
 
 
 
 //Accéder aux données du limelight
+=======
+  boolean jamaisattetint = true;
+  boolean jamaisattetint2 = true;
+  boolean jamaisattetint3 = true;
+  boolean jamaisattetint4 = true;
+  boolean jamaisattetintroule = false;
+  int etape = 0;
+
+//Méthodes
+
+// Allumer le compresseur
+ public void allumerCompresseur() {
+    c.start();
+ }
+
+ public void fermerCompresseur(){
+   c.stop();
+ }
+
+
+  //Refroidir les moteurs si + que 40 degrés
+     public void refroidirMoteurs(double m_temperature){
+       // changer pour modifier le maximum de temperature
+    if (m_temperature > 40) {
+      c.start();
+    } else {
+      c.stop();
+    }
+    }
+    
+    // Lancer
+    public void lancer(){
+       if (m_stick.getRawButton(6)) {
+      try {
+        m_lanceur.set(0.7);
+        TimeUnit.SECONDS.sleep(3);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      finally{
+        m_lanceur.set(0.0);
+      }
+    }
+    }
+   
+    public void suivreBalle(double x){
+      m_robotDrive.arcadeDrive(-0.7, -x * 0.04);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+  // enum Sequences
+  // {
+  // AVANCER1, TOURNERGAUCHE, AVANCER2, VISER,
+  // LANCER, FIN;
+  // }
+
+  // Accéder aux données du limelight
+>>>>>>> Stashed changes
   NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
   NetworkTableEntry tx = table.getEntry("tx");
   NetworkTableEntry ty = table.getEntry("ty");
@@ -82,6 +151,7 @@ public class Robot extends TimedRobot {
 
   }
 
+<<<<<<< Updated upstream
     
 //Conduire avec 'arcade drive'
   @Override
@@ -118,6 +188,163 @@ SmartDashboard.putNumber("pidOut", pidOut);
 if (m_stick.getRawButton(1)) {
     m_robotDrive.arcadeDrive(-0.7, -x*0.04);
   
+=======
+
+  // Conduire avec 'arcade drive'
+  @Override
+  public void teleopPeriodic() {
+    m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
+    
+     // Lire les données du limelight
+    double x = tx.getDouble(0.0);
+    double y = ty.getDouble(0.0);
+    double area = ta.getDouble(0.0);
+
+    // Lire les données du navX
+    double anglemesure = ahrs.getYaw();
+    double vitesseangulaire = ahrs.getRawGyroX();
+    double pidOut2 = m_pidController2.calculate(anglemesure);
+    double pidOut = m_pidController.calculate(anglemesure);
+
+    // détecter la chaleur des moteurs
+    double m_temperature = m_test.getTemperature();
+    refroidirMoteurs(m_temperature);
+
+    if (m_stick.getRawButton(5)) {
+      allumerCompresseur();
+    } else {
+      fermerCompresseur();
+    }
+
+    if (m_stick.getRawButton(6)) {
+      lancer();
+    }
+  
+    SmartDashboard.putNumber("m_temperature", m_temperature);
+
+   
+
+    // Poster au smart dashboard les données du navX
+    SmartDashboard.putNumber("anglemesure", anglemesure);
+    SmartDashboard.putNumber("vitesseangulaire", vitesseangulaire);
+
+    // Poster au smart dashboard les données du limelight
+    SmartDashboard.putNumber("LimelightX", x);
+    SmartDashboard.putNumber("LimelightY", y);
+    SmartDashboard.putNumber("LimelightArea", area);
+
+
+    SmartDashboard.putNumber("pidOut2", pidOut2);
+    SmartDashboard.putNumber("pidOut", pidOut);
+
+    // Système de controle automatique
+    if (m_stick.getRawButton(1)) {
+      suivreBalle(x);
+    }
+    
+    // Tourner a un angle
+    if (m_stick.getRawButton(2)) {
+      ahrs.reset();
+      // faire
+      // m_pidController2.setSetpoint(0.0);
+
+    } else {
+
+    }
+
+    if (m_stick.getRawButton(3)) {
+      // double erreur = 90.0 - anglemesure;
+      m_robotDrive.arcadeDrive(0.0, pidOut);
+    }
+
+    if (m_stick.getRawButton(4)) {
+      m_robotDrive.arcadeDrive(-0.7, pidOut2);
+    }
+    if (m_stick.getRawButton(7)) {
+      m_test.setSelectedSensorPosition(0);
+
+    }
+    double m_distance = m_test.getSelectedSensorPosition();
+    SmartDashboard.putNumber("m_distance", m_distance);
+
+  }// Fin du teleop.periodic
+
+  public void autonomousPeriodic() {
+
+    // partie autonome
+    double m_distance = m_test.getSelectedSensorPosition();
+    SmartDashboard.putNumber("m_distance", m_distance);
+    double anglemesure = ahrs.getYaw();
+    int index = 1;
+
+    // Sequences TOURNERGAUCHE;
+
+    switch (etape) {
+
+    case 0:
+
+      if (jamaisattetint) {
+        if (m_distance < 5000) {
+          m_test.set(0.07);
+        } else {
+          m_test.set(0.0);
+          jamaisattetint = false;
+
+          etape = index++;
+        }
+      }
+
+      break;
+    case 1:
+      // Tourner a gauche 90 degrés
+      ahrs = new AHRS(SPI.Port.kMXP);
+      ahrs.reset();
+      m_pidController = new PIDController(kP, kI, kD, 0.02);
+      m_pidController.setSetpoint(90.0);
+
+      double pidOut = m_pidController.calculate(anglemesure);
+      m_robotDrive.arcadeDrive(0.0, pidOut);
+      etape = index++;
+      break;
+
+    case 2:
+      m_test.setSelectedSensorPosition(0);
+      if (jamaisattetint2) {
+        if (m_distance < 5000) {
+          m_test.set(0.07);
+
+        } else {
+          m_test.set(0.0);
+          jamaisattetint2 = false;
+          etape = index++;
+        }
+      }
+      break;
+
+    case 3:
+      ahrs = new AHRS(SPI.Port.kMXP);
+      ahrs.reset();
+      m_pidController = new PIDController(kP, kI, kD, 0.02);
+      m_pidController.setSetpoint(90.0);
+      m_pidController.calculate(anglemesure);
+      m_robotDrive.arcadeDrive(0.0, 0.0);
+      etape = index++;
+      break;
+
+    case 4:
+      m_test.setSelectedSensorPosition(0);
+      if (jamaisattetint4) {
+        if (m_distance < 5000) {
+          m_test.set(0.07);
+        } else {
+          m_test.set(0.0);
+          jamaisattetint4 = false;
+        }
+      }
+      break;
+
+    }
+>>>>>>> Stashed changes
   }
 //Tourner a un angle
 if (m_stick.getRawButton(2)) {
