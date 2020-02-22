@@ -91,28 +91,70 @@ public class Robot extends TimedRobot {
     c = new Compressor(0);
   }
 
+//Méthodes
+
+// Allumer le compresseur
+public void allumerCompresseur() {
+  c.start();
+}
+// Fermer le compresseur
+public void fermerCompresseur(){
+ c.stop();
+}
+
+
+//Refroidir les moteurs si + que 40 degrés
+   public void refroidirMoteurs(double m_temperature){
+     // changer pour modifier le maximum de temperature
+  if (m_temperature > 40) {
+    c.start();
+  } else {
+    c.stop();
+  }
+  }
+  
+  // Lancer
+  public void lancer(){
+     if (m_stick.getRawButton(6)) {
+    try {
+      m_lanceur.set(0.7);
+      TimeUnit.SECONDS.sleep(3);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    finally{
+      m_lanceur.set(0.0);
+    }
+  }
+  }
+ 
+  public void suivreBalle(double x){
+    m_robotDrive.arcadeDrive(-0.7, -x * 0.04);
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // Conduire avec 'arcade drive'
   @Override
   public void teleopPeriodic() {
     m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
 
-    // Allumer les compresseur
-    if (m_stick.getRawButton(5)) {
-      c.start();
-    } else {
-      c.stop();
-    }
-
+  
     // détecter la chaleur des moteurs
 
     double m_temperature = m_test.getTemperature();
-    // changer pour modifier le maximum de temperature
-    if (m_temperature > 40) {
-      c.start();
-    } else {
-      c.stop();
-    }
-
+    refroidirMoteurs(m_temperature);
     SmartDashboard.putNumber("m_temperature", m_temperature);
 
     // Lire les données du limelight
@@ -126,17 +168,19 @@ public class Robot extends TimedRobot {
 
     double pidOut2 = m_pidController2.calculate(anglemesure);
     double pidOut = m_pidController.calculate(anglemesure);
+    
+
+  // Allumer les compresseur
+    if (m_stick.getRawButton(5)) {
+      allumerCompresseur();
+    } else {
+      fermerCompresseur();
+    }
 
     // Lancer
-    if (m_stick.getRawButton(6)) {
-      try {
-        m_lanceur.set(0.7);
-        TimeUnit.SECONDS.sleep(1);
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-    }
+    if (m_stick.getRawButton(6))
+      lancer();
+    
 
     SmartDashboard.putNumber("anglemesure", anglemesure);
     SmartDashboard.putNumber("vitesseangulaire", vitesseangulaire);
@@ -149,19 +193,14 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("pidOut", pidOut);
 
     // Système de controle automatique
-    if (m_stick.getRawButton(1)) {
-      m_robotDrive.arcadeDrive(-0.7, -x * 0.04);
+    if (m_stick.getRawButton(1)) 
+      suivreBalle(x);
 
-    }
     // Tourner a un angle
-    if (m_stick.getRawButton(2)) {
+    if (m_stick.getRawButton(2)) 
       ahrs.reset();
       // faire
       // m_pidController2.setSetpoint(0.0);
-
-    } else {
-
-    }
 
     if (m_stick.getRawButton(3)) {
       // double erreur = 90.0 - anglemesure;
