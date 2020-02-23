@@ -69,7 +69,9 @@ public class Robot extends TimedRobot {
   boolean jamaisattetint4 = true;
   boolean jamaisattetintroule = false;
   int etape = 0;
-
+  boolean feeder = true;
+  private static final double positionfeederouvert = 1;
+  private static final double positionfeederfermer = 0.5;
   // enum Sequences
   // {
   // AVANCER1, TOURNERGAUCHE, AVANCER2, VISER,
@@ -206,22 +208,35 @@ public class Robot extends TimedRobot {
 
 //-------------------------------------------
     //limit switches climb
-    double a = m_stick.getRawAxis(3);
-    double b;
-
-    if (a < 0.0 & leftClimbStop.get() == true) {
-    b = 0.0;
+    double c = m_stick.getRawAxis(3);
+    double d;
+    if (c < 0.0 & leftClimbStop.get() == true) {
+    d = 0.0;
     } else {
-      if (a > 0.0 & leftClimbStop.get() == true ) {
-        b = 0.0;
+      if (c > 0.0 & leftClimbStop.get() == true ) {
+        d = 0.0;
       } else {
-        b = a;
+        d = c;
       }
     }
 
-    m_intakeArm.set(b);
+    m_leftClimb.set(b);
 
    //-------------------------------------------- 
+ //limit switches climb
+ double e = m_stick.getRawAxis(3);
+ double f;
+ if (e < 0.0 & rightClimbStop.get() == true) {
+ f = 0.0;
+ } else {
+   if (e > 0.0 & rightClimbStop.get() == true ) {
+     f = 0.0;
+   } else {
+     f = e;
+   }
+ }
+
+ m_rightClimb.set(b);
 
 
 
@@ -230,7 +245,17 @@ public class Robot extends TimedRobot {
 
 
 
-
+    // //feeder
+    // double m_distancefeeder = m_feederBall.getSelectedSensorPosition();
+    // if (m_stick.getRawButtonReleased(8) & feeder == true & "limitswitch2" = on & "limitswitch1" = off) {
+    //   m_feederBall.set();
+    //   feeder = false;
+      
+    // }
+    // if (m_stick.getRawButtonReleased(8) & feeder == false) {
+    //   m_feederBall.set();
+    //   feeder = true;
+    // }
 
     // Lire les données du navX
     double anglemesure = ahrs.getYaw();
