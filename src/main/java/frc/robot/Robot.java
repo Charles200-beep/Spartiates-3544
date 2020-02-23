@@ -8,32 +8,51 @@
 //Importer les librairies
 package frc.robot;
 
-import edu.wpi.first.wpilibj.Joystick;
+
+import java.util.concurrent.TimeUnit;
+
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import com.kauailabs.navx.frc.AHRS;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.Compressor;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-import java.util.concurrent.TimeUnit;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.controller.PIDController;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.DigitalInput;
+//import edu.wpi.first.wpilibj.buttons.Button;
+//import edu.wpi.first.wpilibj.buttons.Trigger;
+
 
 //Définir les composantes
 public class Robot extends TimedRobot {
   private PIDController m_pidController;
   private WPI_TalonFX m_lanceur;
   private PIDController m_pidController2;
-  private WPI_VictorSPX m_leftMotor;
-  private WPI_VictorSPX m_rightMotor;
-  private WPI_VictorSPX m_leftMotor2;
-  private WPI_VictorSPX m_leftMotor3;
-  private WPI_VictorSPX m_rightMotor2;
-  private WPI_VictorSPX m_rightMotor3;
+  private WPI_TalonFX m_leftMotor;
+  private WPI_TalonFX m_rightMotor;
+  private WPI_TalonFX m_leftMotor2;
+  private WPI_TalonFX m_rightMotor2;
+  private WPI_VictorSPX m_rightClimb;
+  private WPI_VictorSPX m_leftClimb;
+  private WPI_VictorSPX m_intakeRoller;
+  private WPI_VictorSPX m_conveyorLow;
+  private WPI_VictorSPX m_conveyorHigh;
+  private WPI_VictorSPX m_feederBall;
+  private WPI_TalonSRX m_intakeArm;
+  private WPI_TalonSRX m_shooter1;
+  private WPI_TalonSRX m_shooter2;
+  private DigitalInput intakeArmLow;
+  private DigitalInput intakeArmHigh;
+  private DigitalInput rightClimbStop;
+  private DigitalInput leftClimbStop;
   private DifferentialDrive m_robotDrive;
   private Joystick m_stick;
   private Compressor c;
@@ -66,93 +85,96 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     m_test = new WPI_TalonFX(01);
-    m_leftMotor2 = new WPI_VictorSPX(5);
-    m_leftMotor = new WPI_VictorSPX(6);
+    m_leftMotor = new WPI_TalonFX(3);
+    m_leftMotor2 = new WPI_TalonFX(4);
+    m_rightMotor = new WPI_TalonFX(1);
+    m_rightMotor2 = new WPI_TalonFX(2);
+    m_rightClimb = new WPI_VictorSPX(5);
+    m_leftClimb = new WPI_VictorSPX(6);
+    m_intakeRoller = new WPI_VictorSPX(7);
+    m_conveyorLow = new WPI_VictorSPX(8);
+    m_conveyorHigh = new WPI_VictorSPX(9);
+    m_feederBall = new WPI_VictorSPX(10);
+    m_intakeArm = new WPI_TalonSRX(11);
+    m_shooter1 = new WPI_TalonSRX(12);
+    m_shooter2 = new WPI_TalonSRX(13);
+    intakeArmLow = new DigitalInput(0);
+    intakeArmHigh = new DigitalInput(1);
+    rightClimbStop = new DigitalInput(2);
+    leftClimbStop = new DigitalInput(3);
+   // intakeArmLow = new Button();
+
+
+
     m_lanceur = new WPI_TalonFX(-1);// changer
-    m_leftMotor3 = new WPI_VictorSPX(7);
-    m_rightMotor = new WPI_VictorSPX(9);
-    m_rightMotor2 = new WPI_VictorSPX(10);
-    m_rightMotor3 = new WPI_VictorSPX(8);
+
     m_robotDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
+
     m_stick = new Joystick(0);
+
     ahrs = new AHRS(SPI.Port.kMXP);
+
     m_pidController = new PIDController(kP, kI, kD, 0.02);
     m_pidController2 = new PIDController(kP2, kI, kD2, 0.02);
     m_pidController.setSetpoint(90.0);
     m_pidController2.setSetpoint(0.0);
+
     m_test.setSelectedSensorPosition(0);
 
     // Faire suivre les autres moteurs
     m_leftMotor2.follow(m_leftMotor);
-    m_leftMotor3.follow(m_leftMotor);
     m_rightMotor2.follow(m_rightMotor);
-    m_rightMotor3.follow(m_rightMotor);
 
     c = new Compressor(0);
   }
 
-//Méthodes
+  // ------------------------------------------------------------------------
+  // Méthodes
 
-// Allumer le compresseur
-public void allumerCompresseur() {
-  c.start();
-}
-// Fermer le compresseur
-public void fermerCompresseur(){
- c.stop();
-}
-
-
-//Refroidir les moteurs si + que 40 degrés
-   public void refroidirMoteurs(double m_temperature){
-     // changer pour modifier le maximum de temperature
-  if (m_temperature > 40) {
+  // Allumer le compresseur
+  public void allumerCompresseur() {
     c.start();
-  } else {
+  }
+
+  // Fermer le compresseur
+  public void fermerCompresseur() {
     c.stop();
   }
+
+  // Refroidir les moteurs si + que 40 degrés
+  public void refroidirMoteurs(double m_temperature) {
+    // changer pour modifier le maximum de temperature
+    if (m_temperature > 40) {
+      c.start();
+    } else {
+      c.stop();
+    }
   }
-  
+
   // Lancer
-  public void lancer(){
-     if (m_stick.getRawButton(6)) {
+  public void lancer() {
     try {
       m_lanceur.set(0.7);
       TimeUnit.SECONDS.sleep(3);
     } catch (InterruptedException e) {
       e.printStackTrace();
-    }
-    finally{
+    } finally {
       m_lanceur.set(0.0);
     }
   }
-  }
- 
-  public void suivreBalle(double x){
+
+  public void suivreBalle(double x) {
     m_robotDrive.arcadeDrive(-0.7, -x * 0.04);
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
+  // ------------------------------------------------------------------------
 
   // Conduire avec 'arcade drive'
   @Override
   public void teleopPeriodic() {
     m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
 
-  
     // détecter la chaleur des moteurs
-
     double m_temperature = m_test.getTemperature();
     refroidirMoteurs(m_temperature);
     SmartDashboard.putNumber("m_temperature", m_temperature);
@@ -162,15 +184,62 @@ public void fermerCompresseur(){
     double y = ty.getDouble(0.0);
     double area = ta.getDouble(0.0);
 
+
+    //-------------------------------------------
+    //limit switches intake arm
+    double a = m_stick.getRawAxis(3);
+    double b;
+
+    if (a < 0.0 & intakeArmLow.get() == true) {
+    b = 0.0;
+    } else {
+      if (a > 0.0 & intakeArmHigh.get() == true ) {
+        b = 0.0;
+      } else {
+        b = a;
+      }
+    }
+
+    m_intakeArm.set(b);
+
+   //-------------------------------------------- 
+
+//-------------------------------------------
+    //limit switches climb
+    double a = m_stick.getRawAxis(3);
+    double b;
+
+    if (a < 0.0 & leftClimbStop.get() == true) {
+    b = 0.0;
+    } else {
+      if (a > 0.0 & leftClimbStop.get() == true ) {
+        b = 0.0;
+      } else {
+        b = a;
+      }
+    }
+
+    m_intakeArm.set(b);
+
+   //-------------------------------------------- 
+
+
+
+
+
+
+
+
+
+
     // Lire les données du navX
     double anglemesure = ahrs.getYaw();
     double vitesseangulaire = ahrs.getRawGyroX();
 
     double pidOut2 = m_pidController2.calculate(anglemesure);
     double pidOut = m_pidController.calculate(anglemesure);
-    
 
-  // Allumer les compresseur
+    // Allumer les compresseur
     if (m_stick.getRawButton(5)) {
       allumerCompresseur();
     } else {
@@ -180,7 +249,6 @@ public void fermerCompresseur(){
     // Lancer
     if (m_stick.getRawButton(6))
       lancer();
-    
 
     SmartDashboard.putNumber("anglemesure", anglemesure);
     SmartDashboard.putNumber("vitesseangulaire", vitesseangulaire);
@@ -193,14 +261,14 @@ public void fermerCompresseur(){
     SmartDashboard.putNumber("pidOut", pidOut);
 
     // Système de controle automatique
-    if (m_stick.getRawButton(1)) 
+    if (m_stick.getRawButton(1))
       suivreBalle(x);
 
     // Tourner a un angle
-    if (m_stick.getRawButton(2)) 
+    if (m_stick.getRawButton(2))
       ahrs.reset();
-      // faire
-      // m_pidController2.setSetpoint(0.0);
+    // faire
+    // m_pidController2.setSetpoint(0.0);
 
     if (m_stick.getRawButton(3)) {
       // double erreur = 90.0 - anglemesure;
@@ -296,14 +364,3 @@ public void fermerCompresseur(){
     }
   }
 }
-
-// m_test.setSelectedSensorPosition(0);
-// if (jamaisattetint3) {
-// if (m_distance<5000) {
-// m_test.set(0.07);
-
-// } else {
-// m_test.set(0.0);
-// jamaisattetint3 = false;
-// etape = 4;
-// break;
