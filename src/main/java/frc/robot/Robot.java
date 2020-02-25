@@ -259,17 +259,18 @@ if (m_stick.getRawButtonReleased(7) & shoot == false) {
    shoot = true;
   
 }  
-
+SmartDashboard.putNumber("m_shooter", m_distanceshooter);
 //DPAD
 if (direction == 0) {
-  m_conveyorHigh.set(0,6);
+ 
 }
-  
+    //---------------------------------------------------
+//mini servo
 
 
 
 
-SmartDashboard.putNumber("m_shooter", m_distanceshooter);
+
     //feeder
      double m_distancefeeder = m_feederBall.getSelectedSensorPosition();
      if (m_stick.getRawButtonReleased(8) & feeder == true & feederhigh.get() == true & feederlow.get() == false) {
