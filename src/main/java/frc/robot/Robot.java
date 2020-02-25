@@ -270,8 +270,8 @@ if (direction == 0) {
 
 
 
-
-    //feeder
+    //---------------------------------------------------
+//feeder
      double m_distancefeeder = m_feederBall.getSelectedSensorPosition();
      if (m_stick.getRawButtonReleased(8) & feeder == true & feederhigh.get() == true & feederlow.get() == false) {
        m_feederBall.set(0.9);
