@@ -68,10 +68,14 @@ public class Robot extends TimedRobot {
   boolean jamaisattetint3 = true;
   boolean jamaisattetint4 = true;
   boolean jamaisattetintroule = false;
+  private DigitalInput feederhigh;
+  private DigitalInput feederlow;
   int etape = 0;
   boolean feeder = true;
   private static final double positionfeederouvert = 1;
   private static final double positionfeederfermer = 0.5;
+  boolean shoot = true;
+  int direction = m_stick.getPOV(0);
   // enum Sequences
   // {
   // AVANCER1, TOURNERGAUCHE, AVANCER2, VISER,
@@ -104,6 +108,8 @@ public class Robot extends TimedRobot {
     intakeArmHigh = new DigitalInput(1);
     rightClimbStop = new DigitalInput(2);
     leftClimbStop = new DigitalInput(3);
+    feederhigh = new DigitalInput(4);
+    feederlow = new DigitalInput(5);
    // intakeArmLow = new Button();
 
 
@@ -235,28 +241,47 @@ public class Robot extends TimedRobot {
      f = e;
    }
  }
-
  m_rightClimb.set(b);
+ //----------------------------------------------
+
+//shooter
+double m_distanceshooter = m_shooter1.getSelectedSensorPosition();
+if (m_stick.getRawButtonReleased(7) & shoot == true) {
+ m_shooter1.set(0.4);
+  m_shooter2.follow(m_shooter1);
+  shoot = false;
+  
+   
+}
+if (m_stick.getRawButtonReleased(7) & shoot == false) {
+  m_shooter1.set(-0.4);
+   m_shooter2.follow(m_shooter1);
+   shoot = true;
+  
+}  
+
+//DPAD
+if (direction == 0) {
+  m_conveyorHigh.set(0,6);
+}
+  
 
 
 
 
-
-
-
-
-    // //feeder
-    // double m_distancefeeder = m_feederBall.getSelectedSensorPosition();
-    // if (m_stick.getRawButtonReleased(8) & feeder == true & "limitswitch2" = on & "limitswitch1" = off) {
-    //   m_feederBall.set();
-    //   feeder = false;
+SmartDashboard.putNumber("m_shooter", m_distanceshooter);
+    //feeder
+     double m_distancefeeder = m_feederBall.getSelectedSensorPosition();
+     if (m_stick.getRawButtonReleased(8) & feeder == true & feederhigh.get() == true & feederlow.get() == false) {
+       m_feederBall.set(0.9);
+       feeder = false;
       
-    // }
-    // if (m_stick.getRawButtonReleased(8) & feeder == false) {
-    //   m_feederBall.set();
-    //   feeder = true;
-    // }
-
+     }
+     if (m_stick.getRawButtonReleased(8) & feeder == false & feederlow.get() == true &  feederhigh.get() == false) {
+       m_feederBall.set(-0.9);
+       feeder = true;
+     }
+     SmartDashboard.putNumber("m_distancefeeder", m_distancefeeder);
     // Lire les données du navX
     double anglemesure = ahrs.getYaw();
     double vitesseangulaire = ahrs.getRawGyroX();
