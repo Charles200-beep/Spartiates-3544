@@ -72,6 +72,7 @@ public class Robot extends TimedRobot {
   private DigitalInput feederlow;
   int etape = 0;
   boolean feeder = true;
+  boolean conveyor1 = true;
   private static final double positionfeederouvert = 1;
   private static final double positionfeederfermer = 0.5;
   boolean shoot = true;
@@ -271,6 +272,25 @@ if (direction == 0) {
 
 
     //---------------------------------------------------
+//conveyor
+if (m_stick.getRawButton(9) & conveyor1 == true) {
+  m_conveyorHigh.set(0.7);
+  m_conveyorLow.follow(m_conveyorHigh);
+ conveyor1 = false;
+ 
+if (m_stick.getRawButtonReleased(9)) {
+  m_conveyorHigh.stopMotor();
+  m_conveyorLow.follow(m_conveyorHigh);
+  conveyor1 = true ;
+}
+}
+
+
+
+
+
+
+    //----------------------------------------------------
 //feeder
      double m_distancefeeder = m_feederBall.getSelectedSensorPosition();
      if (m_stick.getRawButtonReleased(8) & feeder == true & feederhigh.get() == true & feederlow.get() == false) {
