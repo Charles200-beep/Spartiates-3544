@@ -73,15 +73,8 @@ public class Robot extends TimedRobot {
   int etape = 0;
   boolean feeder = true;
   boolean conveyor1 = true;
-  private static final double positionfeederouvert = 1;
-  private static final double positionfeederfermer = 0.5;
   boolean shoot = true;
   int direction = m_stick.getPOV(0);
-  // enum Sequences
-  // {
-  // AVANCER1, TOURNERGAUCHE, AVANCER2, VISER,
-  // LANCER, FIN;
-  // }
 
   // Accéder aux données du limelight
   NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -111,6 +104,7 @@ public class Robot extends TimedRobot {
     leftClimbStop = new DigitalInput(3);
     feederhigh = new DigitalInput(4);
     feederlow = new DigitalInput(5);
+    m_intakeRoller = new WPI_VictorSPX(7);
    // intakeArmLow = new Button();
 
 
@@ -212,6 +206,17 @@ public class Robot extends TimedRobot {
     m_intakeArm.set(b);
 
    //-------------------------------------------- 
+
+  //Intake Arm
+ if (m_stick.getRawButton(6)) {//changer
+   m_intakeRoller.set(0.7);
+ } else {
+   m_intakeRoller.set(0.0);
+ }
+
+
+
+
 
 //-------------------------------------------
     //limit switches climb
