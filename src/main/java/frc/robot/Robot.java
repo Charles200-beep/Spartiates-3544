@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Servo;
 //import edu.wpi.first.wpilibj.buttons.Button;
 //import edu.wpi.first.wpilibj.buttons.Trigger;
 
@@ -75,6 +76,9 @@ public class Robot extends TimedRobot {
   boolean conveyor1 = true;
   boolean shoot = true;
   int direction = m_stick.getPOV(0);
+  private Servo m_leftClimbRatchet;
+  private Servo m_rightClimbRatchet;
+  double angle = 0.0;
 
   // Accéder aux données du limelight
   NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -105,6 +109,8 @@ public class Robot extends TimedRobot {
     feederhigh = new DigitalInput(4);
     feederlow = new DigitalInput(5);
     m_intakeRoller = new WPI_VictorSPX(7);
+    m_rightClimbRatchet = new Servo(0);
+    m_leftClimbRatchet = new Servo(1);
    // intakeArmLow = new Button();
 
 
@@ -272,6 +278,42 @@ if (direction == 0) {
 }
     //---------------------------------------------------
 //mini servo
+
+SmartDashboard.putNumber("angle", angle);
+m_leftClimbRatchet.setAngle(angle);
+if (m_stick.getRawButtonReleased(1)) {
+  angle = angle+10;
+}
+if (m_stick.getRawButtonReleased(2)) {
+  angle = angle-10;
+
+}
+if (m_stick.getRawButtonReleased(3)) {
+  m_leftClimbRatchet.setAngle(0);
+
+if (m_stick.getRawButtonReleased(4)) {
+  m_leftClimbRatchet.setAngle(90);
+
+}
+
+}
+m_rightClimbRatchet.setAngle(angle);
+if (m_stick.getRawButtonReleased(1)) {
+  angle = angle+10;
+}
+if (m_stick.getRawButtonReleased(2)) {
+  angle = angle-10;
+
+}
+if (m_stick.getRawButtonReleased(3)) {
+  m_rightClimbRatchet.setAngle(0);
+
+if (m_stick.getRawButtonReleased(4)) {
+  m_rightClimbRatchet.setAngle(90);
+
+}
+
+}
 
 
 
