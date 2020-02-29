@@ -371,8 +371,8 @@ if (m_stick.getRawButtonReleased(9)) {
     SmartDashboard.putNumber("anglemesure", anglemesure);
     SmartDashboard.putNumber("vitesseangulaire", vitesseangulaire);
     // Poster au smart dashboard les données du limelight
-    SmartDashboard.putNumber("LimelightX", x);
-    SmartDashboard.putNumber("LimelightY", y);
+    SmartDashboard.putNumber("Limelighty",y);
+    SmartDashboard.putNumber("Limelightx", x);
     SmartDashboard.putNumber("LimelightArea", area);
 
     SmartDashboard.putNumber("pidOut2", pidOut2);
