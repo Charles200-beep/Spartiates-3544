@@ -8,14 +8,11 @@
 //Importer les librairies
 package frc.robot;
 
-
 import java.util.concurrent.TimeUnit;
-
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
-
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -28,15 +25,13 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Servo;
-//import edu.wpi.first.wpilibj.buttons.Button;
-//import edu.wpi.first.wpilibj.buttons.Trigger;
 
 
 //Définir les composantes
 public class Robot extends TimedRobot {
   private PIDController m_pidController;
   private WPI_TalonFX m_lanceur;
-  private PIDController m_pidController2;
+  // private PIDController m_pidController2;
   private WPI_TalonFX m_leftMotor;
   private WPI_TalonFX m_rightMotor;
   private WPI_TalonFX m_leftMotor2;
@@ -60,10 +55,10 @@ public class Robot extends TimedRobot {
   private WPI_TalonFX m_test;
   private AHRS ahrs;
   private static final double kP = -.075;
-  private static final double kP2 = -.075;
+  // private static final double kP2 = -.075;
   private static final double kI = -0.00;
   private static final double kD = -0.0;
-  private static final double kD2 = -0.0;
+  // private static final double kD2 = -0.0;
   boolean jamaisattetint = true;
   boolean jamaisattetint2 = true;
   boolean jamaisattetint3 = true;
@@ -75,11 +70,13 @@ public class Robot extends TimedRobot {
   boolean feeder = true;
   boolean conveyor1 = true;
   boolean shoot = true;
-  int direction = m_stick.getPOV(0);
-  private Servo m_leftClimbRatchet;
-  private Servo m_rightClimbRatchet;
+  // int direction = m_stick.getPOV(0);
+  // private Servo m_leftClimbRatchet;
+  // private Servo m_rightClimbRatchet;
   double angle = 0.0;
+  private Joystick m_stick2;
 
+  
   // Accéder aux données du limelight
   NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
   NetworkTableEntry tx = table.getEntry("tx");
@@ -109,32 +106,24 @@ public class Robot extends TimedRobot {
     feederhigh = new DigitalInput(4);
     feederlow = new DigitalInput(5);
     m_intakeRoller = new WPI_VictorSPX(7);
-    m_rightClimbRatchet = new Servo(0);
-    m_leftClimbRatchet = new Servo(1);
-   // intakeArmLow = new Button();
-
-
-
+    // m_rightClimbRatchet = new Servo(0);
+    // m_leftClimbRatchet = new Servo(1);
+    m_stick2 = new Joystick(1);
     m_lanceur = new WPI_TalonFX(-1);// changer
-
     m_robotDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
-
     m_stick = new Joystick(0);
-
     ahrs = new AHRS(SPI.Port.kMXP);
-
     m_pidController = new PIDController(kP, kI, kD, 0.02);
-    m_pidController2 = new PIDController(kP2, kI, kD2, 0.02);
+    // m_pidController2 = new PIDController(kP2, kI, kD2, 0.02);
     m_pidController.setSetpoint(90.0);
-    m_pidController2.setSetpoint(0.0);
-
+    // m_pidController2.setSetpoint(0.0);
     m_test.setSelectedSensorPosition(0);
-
+    c = new Compressor(0);
     // Faire suivre les autres moteurs
     m_leftMotor2.follow(m_leftMotor);
     m_rightMotor2.follow(m_rightMotor);
 
-    c = new Compressor(0);
+   
   }
 
   // ------------------------------------------------------------------------
@@ -177,12 +166,25 @@ public class Robot extends TimedRobot {
   }
 
   // ------------------------------------------------------------------------
-
   // Conduire avec 'arcade drive'
-  @Override
+  @Override 
   public void teleopPeriodic() {
-    m_robotDrive.arcadeDrive(m_stick.getY(), -m_stick.getX());
+  double leftTrigger = m_stick.getRawAxis(4);
+  double rightTrigger = m_stick.getRawAxis(5);
+  double rotation = leftTrigger - rightTrigger;
+  m_robotDrive.arcadeDrive(m_stick.getY(), rotation);
+    
 
+
+  //   if (leftTrigger > -0.9 ) {
+  //     m_robotDrive.arcadeDrive(0, -leftTrigger);
+  //   }
+
+  // if (rightTrigger > -0.9 ) {
+  //   m_robotDrive.arcadeDrive(0, -rightTrigger);
+  // }
+
+    //-------------------------------------------
     // détecter la chaleur des moteurs
     double m_temperature = m_test.getTemperature();
     refroidirMoteurs(m_temperature);
@@ -195,7 +197,7 @@ public class Robot extends TimedRobot {
 
 
     //-------------------------------------------
-    //limit switches intake arm
+    // limit switches intake arm
     double a = m_stick.getRawAxis(3);
     double b;
 
@@ -213,8 +215,8 @@ public class Robot extends TimedRobot {
 
    //-------------------------------------------- 
 
-  //Intake Arm
- if (m_stick.getRawButton(6)) {//changer
+  //Intake Roller
+ if (m_stick2.getRawButton(4)) {//changer
    m_intakeRoller.set(0.7);
  } else {
    m_intakeRoller.set(0.0);
@@ -226,19 +228,19 @@ public class Robot extends TimedRobot {
 
 //-------------------------------------------
     //limit switches climb
-    double c = m_stick.getRawAxis(3);
+    double z = m_stick.getRawAxis(3);
     double d;
-    if (c < 0.0 & leftClimbStop.get() == true) {
+    if (z < 0.0 & leftClimbStop.get() == true) {
     d = 0.0;
     } else {
-      if (c > 0.0 & leftClimbStop.get() == true ) {
+      if (z > 0.0 & leftClimbStop.get() == true ) {
         d = 0.0;
       } else {
-        d = c;
+        d = z;
       }
     }
 
-    m_leftClimb.set(b);
+    m_leftClimb.set(d);
 
    //-------------------------------------------- 
  //limit switches climb
@@ -253,155 +255,143 @@ public class Robot extends TimedRobot {
      f = e;
    }
  }
- m_rightClimb.set(b);
+ m_rightClimb.set(f);
  //----------------------------------------------
 
 //shooter
 double m_distanceshooter = m_shooter1.getSelectedSensorPosition();
-if (m_stick.getRawButtonReleased(7) & shoot == true) {
+if (m_stick2.getRawButtonReleased(1) & shoot == true) {
  m_shooter1.set(0.4);
   m_shooter2.follow(m_shooter1);
   shoot = false;
   
    
 }
-if (m_stick.getRawButtonReleased(7) & shoot == false) {
+if (m_stick2.getRawButtonReleased(1) & shoot == false) {
   m_shooter1.set(-0.4);
    m_shooter2.follow(m_shooter1);
    shoot = true;
   
 }  
-SmartDashboard.putNumber("m_shooter", m_distanceshooter);
 //DPAD
-if (direction == 0) {
+// if (direction == 0) {
  
-}
+// }
     //---------------------------------------------------
 //mini servo
 
-SmartDashboard.putNumber("angle", angle);
-m_leftClimbRatchet.setAngle(angle);
-if (m_stick.getRawButtonReleased(1)) {
-  angle = angle+10;
-}
-if (m_stick.getRawButtonReleased(2)) {
-  angle = angle-10;
+// SmartDashboard.putNumber("angle", angle);
+// m_leftClimbRatchet.setAngle(angle);
+// if (m_stick.getRawButtonReleased(null)) {
+//   angle = angle+10;
+// }
+// if (m_stick.getRawButtonReleased(null)) {
+//   angle = angle-10;
 
-}
-if (m_stick.getRawButtonReleased(3)) {
-  m_leftClimbRatchet.setAngle(0);
+// }
+// if (m_stick.getRawButtonReleased(null)) {
+//   m_leftClimbRatchet.setAngle(0);
 
-if (m_stick.getRawButtonReleased(4)) {
-  m_leftClimbRatchet.setAngle(90);
+// if (m_stick.getRawButtonReleased(null)) {
+//   m_leftClimbRatchet.setAngle(90);
 
-}
+// }
 
-}
-m_rightClimbRatchet.setAngle(angle);
-if (m_stick.getRawButtonReleased(1)) {
-  angle = angle+10;
-}
-if (m_stick.getRawButtonReleased(2)) {
-  angle = angle-10;
+// }
+// m_rightClimbRatchet.setAngle(angle);
+// if (m_stick.getRawButtonReleased(null)) {
+//   angle = angle+10;
+// }
+// if (m_stick.getRawButtonReleased(null)) {
+//   angle = angle-10;
 
-}
-if (m_stick.getRawButtonReleased(3)) {
-  m_rightClimbRatchet.setAngle(0);
+// }
+// if (m_stick.getRawButtonReleased(null)) {
+//   m_rightClimbRatchet.setAngle(0);
 
-if (m_stick.getRawButtonReleased(4)) {
-  m_rightClimbRatchet.setAngle(90);
+// if (m_stick.getRawButtonReleased(null)) {
+//   m_rightClimbRatchet.setAngle(90);
 
-}
+// }
 
-}
+// }
 
 
 
 
     //---------------------------------------------------
 //conveyor
-if (m_stick.getRawButton(9) & conveyor1 == true) {
+if (m_stick2.getRawButton(2) & conveyor1 == true) {
   m_conveyorHigh.set(0.7);
   m_conveyorLow.follow(m_conveyorHigh);
  conveyor1 = false;
  
-if (m_stick.getRawButtonReleased(9)) {
+if (m_stick2.getRawButtonReleased(2)) {
   m_conveyorHigh.stopMotor();
   m_conveyorLow.follow(m_conveyorHigh);
   conveyor1 = true ;
 }
 }
 
-
-
-
-
-
-    //----------------------------------------------------
+//----------------------------------------------------
 //feeder
      double m_distancefeeder = m_feederBall.getSelectedSensorPosition();
-     if (m_stick.getRawButtonReleased(8) & feeder == true & feederhigh.get() == true & feederlow.get() == false) {
+     if (m_stick.getRawButtonReleased(6) & feeder == true & feederhigh.get() == true & feederlow.get() == false) {
        m_feederBall.set(0.9);
        feeder = false;
       
      }
-     if (m_stick.getRawButtonReleased(8) & feeder == false & feederlow.get() == true &  feederhigh.get() == false) {
+     if (m_stick.getRawButtonReleased(6) & feeder == false & feederlow.get() == true & feederhigh.get() == false) {
        m_feederBall.set(-0.9);
        feeder = true;
      }
-     SmartDashboard.putNumber("m_distancefeeder", m_distancefeeder);
     // Lire les données du navX
     double anglemesure = ahrs.getYaw();
     double vitesseangulaire = ahrs.getRawGyroX();
 
-    double pidOut2 = m_pidController2.calculate(anglemesure);
+    // double pidOut2 = m_pidController2.calculate(anglemesure);
     double pidOut = m_pidController.calculate(anglemesure);
 
     // Allumer les compresseur
-    if (m_stick.getRawButton(5)) {
+    if (m_stick.getRawButton(10)) {
       allumerCompresseur();
     } else {
       fermerCompresseur();
     }
 
     // Lancer
-    if (m_stick.getRawButton(6))
-      lancer();
+    // if (m_stick.getRawButton(6))
+    //   lancer();
 
-    SmartDashboard.putNumber("anglemesure", anglemesure);
-    SmartDashboard.putNumber("vitesseangulaire", vitesseangulaire);
     // Poster au smart dashboard les données du limelight
-    SmartDashboard.putNumber("Limelighty",y);
     SmartDashboard.putNumber("Limelightx", x);
     SmartDashboard.putNumber("LimelightArea", area);
 
-    SmartDashboard.putNumber("pidOut2", pidOut2);
-    SmartDashboard.putNumber("pidOut", pidOut);
+    // SmartDashboard.putNumber("pidOut2", pidOut2);
 
     // Système de controle automatique
-    if (m_stick.getRawButton(1))
+    if (m_stick2.getRawButton(3))
       suivreBalle(x);
 
     // Tourner a un angle
-    if (m_stick.getRawButton(2))
+    if (m_stick.getRawButton(7) & m_stick.getRawButton(8))
       ahrs.reset();
     // faire
     // m_pidController2.setSetpoint(0.0);
 
-    if (m_stick.getRawButton(3)) {
+    if (m_stick.getRawButton(5) | m_stick.getRawButton(6) ) {
       // double erreur = 90.0 - anglemesure;
       m_robotDrive.arcadeDrive(0.0, pidOut);
     }
 
-    if (m_stick.getRawButton(4)) {
-      m_robotDrive.arcadeDrive(-0.7, pidOut2);
-    }
-    if (m_stick.getRawButton(7)) {
+    // if (m_stick.getRawButton(4)) {
+    //   m_robotDrive.arcadeDrive(-0.7, pidOut2);
+    
+    if (m_stick.getRawButton(7) & m_stick.getRawButton(8)) {
       m_test.setSelectedSensorPosition(0);
 
     }
     double m_distance = m_test.getSelectedSensorPosition();
-    SmartDashboard.putNumber("m_distance", m_distance);
 
   }// Fin du teleop.periodic
 
