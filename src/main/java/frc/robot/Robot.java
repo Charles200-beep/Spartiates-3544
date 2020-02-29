@@ -26,8 +26,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Servo;
 
+enum Sequences {
 
-//Définir les composantes
+  AVANCER_1, TOURNER_1, TOURNER_2, AVANCER_2, VISER, LANCER, FIN, AVANCER_3;
+
+}
+
+// Définir les composantes
 public class Robot extends TimedRobot {
   private PIDController m_pidController;
   private WPI_TalonFX m_lanceur;
@@ -58,6 +63,18 @@ public class Robot extends TimedRobot {
   // private static final double kP2 = -.075;
   private static final double kI = -0.00;
   private static final double kD = -0.0;
+  // private static final double ratioGearboxRoues = 8.68;
+  // private static final double diametreRoues = 15.24; // en centimetres
+  // private static final double rotationNombre = 2048;
+  double distanceautonome1 = 1128726;
+  double distanceautonome2 = 519808;
+  double distanceautonome3 = 853970;
+
+  // Initialisation automatique
+  boolean initialiser = true;
+  double distance = 0.0;
+  Sequences step = Sequences.AVANCER_1;
+
   // private static final double kD2 = -0.0;
   boolean jamaisattetint = true;
   boolean jamaisattetint2 = true;
@@ -76,7 +93,6 @@ public class Robot extends TimedRobot {
   double angle = 0.0;
   private Joystick m_stick2;
 
-  
   // Accéder aux données du limelight
   NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
   NetworkTableEntry tx = table.getEntry("tx");
@@ -123,7 +139,6 @@ public class Robot extends TimedRobot {
     m_leftMotor2.follow(m_leftMotor);
     m_rightMotor2.follow(m_rightMotor);
 
-   
   }
 
   // ------------------------------------------------------------------------
@@ -167,24 +182,22 @@ public class Robot extends TimedRobot {
 
   // ------------------------------------------------------------------------
   // Conduire avec 'arcade drive'
-  @Override 
+  @Override
   public void teleopPeriodic() {
-  double leftTrigger = m_stick.getRawAxis(4);
-  double rightTrigger = m_stick.getRawAxis(5);
-  double rotation = leftTrigger - rightTrigger;
-  m_robotDrive.arcadeDrive(m_stick.getY(), rotation);
-    
+    double leftTrigger = m_stick.getRawAxis(4);
+    double rightTrigger = m_stick.getRawAxis(5);
+    double rotation = leftTrigger - rightTrigger;
+    m_robotDrive.arcadeDrive(m_stick.getY(), rotation);
 
+    // if (leftTrigger > -0.9 ) {
+    // m_robotDrive.arcadeDrive(0, -leftTrigger);
+    // }
 
-  //   if (leftTrigger > -0.9 ) {
-  //     m_robotDrive.arcadeDrive(0, -leftTrigger);
-  //   }
+    // if (rightTrigger > -0.9 ) {
+    // m_robotDrive.arcadeDrive(0, -rightTrigger);
+    // }
 
-  // if (rightTrigger > -0.9 ) {
-  //   m_robotDrive.arcadeDrive(0, -rightTrigger);
-  // }
-
-    //-------------------------------------------
+    // -------------------------------------------
     // détecter la chaleur des moteurs
     double m_temperature = m_test.getTemperature();
     refroidirMoteurs(m_temperature);
@@ -195,16 +208,15 @@ public class Robot extends TimedRobot {
     double y = ty.getDouble(0.0);
     double area = ta.getDouble(0.0);
 
-
-    //-------------------------------------------
+    // -------------------------------------------
     // limit switches intake arm
     double a = m_stick.getRawAxis(3);
     double b;
 
     if (a < 0.0 & intakeArmLow.get() == true) {
-    b = 0.0;
+      b = 0.0;
     } else {
-      if (a > 0.0 & intakeArmHigh.get() == true ) {
+      if (a > 0.0 & intakeArmHigh.get() == true) {
         b = 0.0;
       } else {
         b = a;
@@ -213,27 +225,23 @@ public class Robot extends TimedRobot {
 
     m_intakeArm.set(b);
 
-   //-------------------------------------------- 
+    // --------------------------------------------
 
-  //Intake Roller
- if (m_stick2.getRawButton(4)) {//changer
-   m_intakeRoller.set(0.7);
- } else {
-   m_intakeRoller.set(0.0);
- }
+    // Intake Roller
+    if (m_stick2.getRawButton(4)) {// changer
+      m_intakeRoller.set(0.7);
+    } else {
+      m_intakeRoller.set(0.0);
+    }
 
-
-
-
-
-//-------------------------------------------
-    //limit switches climb
+    // -------------------------------------------
+    // limit switches climb
     double z = m_stick.getRawAxis(3);
     double d;
     if (z < 0.0 & leftClimbStop.get() == true) {
-    d = 0.0;
+      d = 0.0;
     } else {
-      if (z > 0.0 & leftClimbStop.get() == true ) {
+      if (z > 0.0 & leftClimbStop.get() == true) {
         d = 0.0;
       } else {
         d = z;
@@ -242,112 +250,105 @@ public class Robot extends TimedRobot {
 
     m_leftClimb.set(d);
 
-   //-------------------------------------------- 
- //limit switches climb
- double e = m_stick.getRawAxis(3);
- double f;
- if (e < 0.0 & rightClimbStop.get() == true) {
- f = 0.0;
- } else {
-   if (e > 0.0 & rightClimbStop.get() == true ) {
-     f = 0.0;
-   } else {
-     f = e;
-   }
- }
- m_rightClimb.set(f);
- //----------------------------------------------
+    // --------------------------------------------
+    // limit switches climb
+    double e = m_stick.getRawAxis(3);
+    double f;
+    if (e < 0.0 & rightClimbStop.get() == true) {
+      f = 0.0;
+    } else {
+      if (e > 0.0 & rightClimbStop.get() == true) {
+        f = 0.0;
+      } else {
+        f = e;
+      }
+    }
+    m_rightClimb.set(f);
+    // ----------------------------------------------
 
-//shooter
-double m_distanceshooter = m_shooter1.getSelectedSensorPosition();
-if (m_stick2.getRawButtonReleased(1) & shoot == true) {
- m_shooter1.set(0.4);
-  m_shooter2.follow(m_shooter1);
-  shoot = false;
-  
-   
-}
-if (m_stick2.getRawButtonReleased(1) & shoot == false) {
-  m_shooter1.set(-0.4);
-   m_shooter2.follow(m_shooter1);
-   shoot = true;
-  
-}  
-//DPAD
-// if (direction == 0) {
- 
-// }
-    //---------------------------------------------------
-//mini servo
+    // shooter
+    if (m_stick2.getRawButtonReleased(1) & shoot == true) {
+      m_shooter1.set(0.4);
+      m_shooter2.follow(m_shooter1);
+      shoot = false;
 
-// SmartDashboard.putNumber("angle", angle);
-// m_leftClimbRatchet.setAngle(angle);
-// if (m_stick.getRawButtonReleased(null)) {
-//   angle = angle+10;
-// }
-// if (m_stick.getRawButtonReleased(null)) {
-//   angle = angle-10;
+    }
+    if (m_stick2.getRawButtonReleased(1) & shoot == false) {
+      m_shooter1.set(-0.4);
+      m_shooter2.follow(m_shooter1);
+      shoot = true;
 
-// }
-// if (m_stick.getRawButtonReleased(null)) {
-//   m_leftClimbRatchet.setAngle(0);
+    }
+    // DPAD
+    // if (direction == 0) {
 
-// if (m_stick.getRawButtonReleased(null)) {
-//   m_leftClimbRatchet.setAngle(90);
+    // }
+    // ---------------------------------------------------
+    // mini servo
 
-// }
+    // SmartDashboard.putNumber("angle", angle);
+    // m_leftClimbRatchet.setAngle(angle);
+    // if (m_stick.getRawButtonReleased(null)) {
+    // angle = angle+10;
+    // }
+    // if (m_stick.getRawButtonReleased(null)) {
+    // angle = angle-10;
 
-// }
-// m_rightClimbRatchet.setAngle(angle);
-// if (m_stick.getRawButtonReleased(null)) {
-//   angle = angle+10;
-// }
-// if (m_stick.getRawButtonReleased(null)) {
-//   angle = angle-10;
+    // }
+    // if (m_stick.getRawButtonReleased(null)) {
+    // m_leftClimbRatchet.setAngle(0);
 
-// }
-// if (m_stick.getRawButtonReleased(null)) {
-//   m_rightClimbRatchet.setAngle(0);
+    // if (m_stick.getRawButtonReleased(null)) {
+    // m_leftClimbRatchet.setAngle(90);
 
-// if (m_stick.getRawButtonReleased(null)) {
-//   m_rightClimbRatchet.setAngle(90);
+    // }
 
-// }
+    // }
+    // m_rightClimbRatchet.setAngle(angle);
+    // if (m_stick.getRawButtonReleased(null)) {
+    // angle = angle+10;
+    // }
+    // if (m_stick.getRawButtonReleased(null)) {
+    // angle = angle-10;
 
-// }
+    // }
+    // if (m_stick.getRawButtonReleased(null)) {
+    // m_rightClimbRatchet.setAngle(0);
 
+    // if (m_stick.getRawButtonReleased(null)) {
+    // m_rightClimbRatchet.setAngle(90);
 
+    // }
 
+    // }
 
-    //---------------------------------------------------
-//conveyor
-if (m_stick2.getRawButton(2) & conveyor1 == true) {
-  m_conveyorHigh.set(0.7);
-  m_conveyorLow.follow(m_conveyorHigh);
- conveyor1 = false;
- 
-if (m_stick2.getRawButtonReleased(2)) {
-  m_conveyorHigh.stopMotor();
-  m_conveyorLow.follow(m_conveyorHigh);
-  conveyor1 = true ;
-}
-}
+    // ---------------------------------------------------
+    // conveyor
+    if (m_stick2.getRawButton(2) & conveyor1 == true) {
+      m_conveyorHigh.set(0.7);
+      m_conveyorLow.follow(m_conveyorHigh);
+      conveyor1 = false;
 
-//----------------------------------------------------
-//feeder
-     double m_distancefeeder = m_feederBall.getSelectedSensorPosition();
-     if (m_stick.getRawButtonReleased(6) & feeder == true & feederhigh.get() == true & feederlow.get() == false) {
-       m_feederBall.set(0.9);
-       feeder = false;
-      
-     }
-     if (m_stick.getRawButtonReleased(6) & feeder == false & feederlow.get() == true & feederhigh.get() == false) {
-       m_feederBall.set(-0.9);
-       feeder = true;
-     }
+      if (m_stick2.getRawButtonReleased(2)) {
+        m_conveyorHigh.stopMotor();
+        m_conveyorLow.follow(m_conveyorHigh);
+        conveyor1 = true;
+      }
+    }
+
+    // ----------------------------------------------------
+    // feeder
+    if (m_stick.getRawButtonReleased(6) & feeder == true & feederhigh.get() == true & feederlow.get() == false) {
+      m_feederBall.set(0.9);
+      feeder = false;
+
+    }
+    if (m_stick.getRawButtonReleased(6) & feeder == false & feederlow.get() == true & feederhigh.get() == false) {
+      m_feederBall.set(-0.9);
+      feeder = true;
+    }
     // Lire les données du navX
     double anglemesure = ahrs.getYaw();
-    double vitesseangulaire = ahrs.getRawGyroX();
 
     // double pidOut2 = m_pidController2.calculate(anglemesure);
     double pidOut = m_pidController.calculate(anglemesure);
@@ -361,7 +362,7 @@ if (m_stick2.getRawButtonReleased(2)) {
 
     // Lancer
     // if (m_stick.getRawButton(6))
-    //   lancer();
+    // lancer();
 
     // Poster au smart dashboard les données du limelight
     SmartDashboard.putNumber("Limelightx", x);
@@ -379,96 +380,195 @@ if (m_stick2.getRawButtonReleased(2)) {
     // faire
     // m_pidController2.setSetpoint(0.0);
 
-    if (m_stick.getRawButton(5) | m_stick.getRawButton(6) ) {
+    if (m_stick.getRawButton(5) | m_stick.getRawButton(6)) {
       // double erreur = 90.0 - anglemesure;
       m_robotDrive.arcadeDrive(0.0, pidOut);
     }
 
     // if (m_stick.getRawButton(4)) {
-    //   m_robotDrive.arcadeDrive(-0.7, pidOut2);
-    
+    // m_robotDrive.arcadeDrive(-0.7, pidOut2);
+
     if (m_stick.getRawButton(7) & m_stick.getRawButton(8)) {
       m_test.setSelectedSensorPosition(0);
 
     }
-    double m_distance = m_test.getSelectedSensorPosition();
 
   }// Fin du teleop.periodic
 
   public void autonomousPeriodic() {
 
-    // partie autonome
     double m_distance = m_test.getSelectedSensorPosition();
     SmartDashboard.putNumber("m_distance", m_distance);
     double anglemesure = ahrs.getYaw();
-    int index = 1;
+    // // partie autonome
+    // double m_distance = m_test.getSelectedSensorPosition();
+    // SmartDashboard.putNumber("m_distance", m_distance);
+    // double anglemesure = ahrs.getYaw();
+    // int index = 1;
 
-    // Sequences TOURNERGAUCHE;
+    // // Sequences TOURNERGAUCHE;
 
-    switch (etape) {
+    // switch (etape) {
 
-    case 0:
+    // case 0:
 
-      if (jamaisattetint) {
-        if (m_distance < 5000) {
-          m_test.set(0.07);
-        } else {
-          m_test.set(0.0);
-          jamaisattetint = false;
+    // if (jamaisattetint) {
+    // if (m_distance < distanceautonome1) {
+    // m_test.set(0.07);
+    // } else {
+    // m_test.set(0.0);
+    // jamaisattetint = false;
 
-          etape = index++;
-        }
+    // etape = index++;
+    // }
+    // }
+
+    // break;
+    // case 1:
+    // // Tourner a gauche 90 degrés
+    // ahrs = new AHRS(SPI.Port.kMXP);
+    // ahrs.reset();
+    // m_pidController = new PIDController(kP, kI, kD, 0.02);
+    // m_pidController.setSetpoint(90.0);
+
+    // double pidOut = m_pidController.calculate(anglemesure);
+    // m_robotDrive.arcadeDrive(0.0, pidOut);
+    // etape = index++;
+    // break;
+
+    // case 2:
+    // m_test.setSelectedSensorPosition(0);
+    // if (jamaisattetint2) {
+    // if (m_distance < distanceautonome2) {
+    // m_test.set(0.07);
+
+    // } else {
+    // m_test.set(0.0);
+    // jamaisattetint2 = false;
+    // etape = index++;
+    // }
+    // }
+    // break;
+
+    // case 3:
+    // ahrs = new AHRS(SPI.Port.kMXP);
+    // ahrs.reset();
+    // m_pidController = new PIDController(kP, kI, kD, 0.02);
+    // m_pidController.setSetpoint(90.0);
+    // m_pidController.calculate(anglemesure);
+    // m_robotDrive.arcadeDrive(0.0, 0.0);
+    // etape = index++;
+    // break;
+
+    // case 4:
+    // m_test.setSelectedSensorPosition(0);
+    // if (jamaisattetint4) {
+    // if (m_distance < distanceautonome3) {
+    // m_test.set(0.07);
+    // } else {
+    // m_test.set(0.0);
+    // jamaisattetint4 = false;
+    // }
+    // }
+    // break;
+
+    // }
+
+    switch (step) {
+    case AVANCER_1:
+      if (initialiser) {
+        // par exemple reset position ou reset gyro
+        m_test.setSelectedSensorPosition(0);
+        initialiser = false;
+      }
+      if (m_distance > distanceautonome1) {
+        m_test.set(0.0);
+        step = Sequences.TOURNER_1;
+        initialiser = true;
+      } else {
+        // avancer
+        m_test.set(0.07);
       }
 
       break;
-    case 1:
-      // Tourner a gauche 90 degrés
-      ahrs = new AHRS(SPI.Port.kMXP);
-      ahrs.reset();
-      m_pidController = new PIDController(kP, kI, kD, 0.02);
-      m_pidController.setSetpoint(90.0);
-
-      double pidOut = m_pidController.calculate(anglemesure);
-      m_robotDrive.arcadeDrive(0.0, pidOut);
-      etape = index++;
-      break;
-
-    case 2:
-      m_test.setSelectedSensorPosition(0);
-      if (jamaisattetint2) {
-        if (m_distance < 5000) {
-          m_test.set(0.07);
-
-        } else {
-          m_test.set(0.0);
-          jamaisattetint2 = false;
-          etape = index++;
-        }
+    case TOURNER_1:
+      if (initialiser) {
+        ahrs = new AHRS(SPI.Port.kMXP);
+        ahrs.reset();
+        m_pidController = new PIDController(kP, kI, kD, 0.02);
+        m_pidController.setSetpoint(90.0);
+        initialiser = false;
       }
-      break;
-
-    case 3:
-      ahrs = new AHRS(SPI.Port.kMXP);
-      ahrs.reset();
-      m_pidController = new PIDController(kP, kI, kD, 0.02);
-      m_pidController.setSetpoint(90.0);
-      m_pidController.calculate(anglemesure);
-      m_robotDrive.arcadeDrive(0.0, 0.0);
-      etape = index++;
-      break;
-
-    case 4:
-      m_test.setSelectedSensorPosition(0);
-      if (jamaisattetint4) {
-        if (m_distance < 5000) {
-          m_test.set(0.07);
-        } else {
-          m_test.set(0.0);
-          jamaisattetint4 = false;
-        }
+      if (m_pidController.atSetpoint()) {
+        step = Sequences.AVANCER_2;
+        initialiser = true;
+      } else {
+        double pidOut = m_pidController.calculate(anglemesure);
+        m_robotDrive.arcadeDrive(0.0, pidOut);
       }
+
+      break;
+
+    case AVANCER_2:
+      if (initialiser) {
+        m_test.setSelectedSensorPosition(0);
+        initialiser = false;
+      }
+      if (m_distance > distanceautonome2) {
+        m_test.set(0.0);
+        step = Sequences.TOURNER_2;
+        initialiser = true;
+      } else {
+        // avancer
+        m_test.set(0.07);
+      }
+
+      break;
+
+    case TOURNER_2:
+      if (initialiser) {
+        ahrs = new AHRS(SPI.Port.kMXP);
+        ahrs.reset();
+        m_pidController = new PIDController(kP, kI, kD, 0.02);
+        m_pidController.setSetpoint(90.0);
+        initialiser = false;
+      }
+      if (m_pidController.atSetpoint()) {
+        step = Sequences.AVANCER_3;
+        initialiser = true;
+      } else {
+        double pidOut = m_pidController.calculate(anglemesure);
+        m_robotDrive.arcadeDrive(0.0, pidOut);
+      }
+
+      break;
+
+    case AVANCER_3:
+      if (initialiser) {
+        m_test.setSelectedSensorPosition(0);
+        initialiser = false;
+      }
+      if (m_distance > distanceautonome3) {
+        m_test.set(0.0);
+        step = Sequences.FIN;
+        initialiser = true;
+
+      } else {
+        // avancer
+        m_test.set(0.07);
+      }
+
+      break;
+
+    case FIN:
+
+    break;
+    default:
+
       break;
 
     }
-  }
-}
+
+  } // fin de l'autonome
+
+} // fin du programme
