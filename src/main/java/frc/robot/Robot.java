@@ -583,7 +583,7 @@ public class Robot extends TimedRobot {
     case FIN:
     m_pidController.close();
     m_test.set(0.0);
-    m_robotDrive.arcadeDrive(0.0, 0.0);
+    m_robotDrive.arcadeDrive(0.0, 0.0); //hello
     
     break;
     default:
