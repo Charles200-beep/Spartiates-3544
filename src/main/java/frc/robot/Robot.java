@@ -57,8 +57,9 @@ public class Robot extends TimedRobot {
   private DifferentialDrive m_robotDrive;
   private Joystick m_stick;
   private Compressor c;
-  private WPI_TalonFX m_test;
+  private FakeMotor m_test;
   private AHRS ahrs;
+  private FakeAHRS fakeahrs;
   private static final double kP = -.075;
   // private static final double kP2 = -.075;
   private static final double kI = -0.00;
@@ -101,7 +102,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    m_test = new WPI_TalonFX(01);
+    m_test = new FakeMotor(01);
     m_leftMotor = new WPI_TalonFX(3);
     m_leftMotor2 = new WPI_TalonFX(4);
     m_rightMotor = new WPI_TalonFX(1);
@@ -395,11 +396,22 @@ public class Robot extends TimedRobot {
 
   }// Fin du teleop.periodic
 
+  @Override
+  public void autonomousInit() {
+    fakeahrs = new FakeAHRS(SPI.Port.kMXP);
+    fakeahrs.YawMotors(m_leftMotor, m_rightMotor);
+    double pidOut;
+  } // fin de autonomousInit
+
+  @Override
   public void autonomousPeriodic() {
 
     double m_distance = m_test.getSelectedSensorPosition();
+    double anglemesure = fakeahrs.getYaw();
     SmartDashboard.putNumber("m_distance", m_distance);
-    double anglemesure = ahrs.getYaw();
+    SmartDashboard.putNumber("anglemesure", anglemesure);
+    double pidOut;
+
     // // partie autonome
     // double m_distance = m_test.getSelectedSensorPosition();
     // SmartDashboard.putNumber("m_distance", m_distance);
@@ -479,6 +491,7 @@ public class Robot extends TimedRobot {
       if (initialiser) {
         // par exemple reset position ou reset gyro
         m_test.setSelectedSensorPosition(0);
+        m_distance = m_test.getSelectedSensorPosition();
         initialiser = false;
       }
       if (m_distance > distanceautonome1) {
@@ -493,17 +506,20 @@ public class Robot extends TimedRobot {
       break;
     case TOURNER_1:
       if (initialiser) {
-        ahrs = new AHRS(SPI.Port.kMXP);
-        ahrs.reset();
+        //fakeahrs = new AHRS(SPI.Port.kMXP);
+        m_robotDrive.arcadeDrive(0.0, 0.0);
+        fakeahrs.reset();
         m_pidController = new PIDController(kP, kI, kD, 0.02);
         m_pidController.setSetpoint(90.0);
+        pidOut = m_pidController.calculate(anglemesure);
         initialiser = false;
       }
-      if (m_pidController.atSetpoint()) {
+      if (m_pidController.atSetpoint()|anglemesure>89.5) { //  this condition may need to be removed
+        m_robotDrive.arcadeDrive(0.0, 0.0);
         step = Sequences.AVANCER_2;
         initialiser = true;
       } else {
-        double pidOut = m_pidController.calculate(anglemesure);
+        pidOut = m_pidController.calculate(anglemesure);
         m_robotDrive.arcadeDrive(0.0, pidOut);
       }
 
@@ -512,6 +528,7 @@ public class Robot extends TimedRobot {
     case AVANCER_2:
       if (initialiser) {
         m_test.setSelectedSensorPosition(0);
+        m_distance = m_test.getSelectedSensorPosition();
         initialiser = false;
       }
       if (m_distance > distanceautonome2) {
@@ -526,26 +543,29 @@ public class Robot extends TimedRobot {
       break;
 
     case TOURNER_2:
-      if (initialiser) {
-        ahrs = new AHRS(SPI.Port.kMXP);
-        ahrs.reset();
-        m_pidController = new PIDController(kP, kI, kD, 0.02);
-        m_pidController.setSetpoint(90.0);
-        initialiser = false;
-      }
-      if (m_pidController.atSetpoint()) {
-        step = Sequences.AVANCER_3;
-        initialiser = true;
-      } else {
-        double pidOut = m_pidController.calculate(anglemesure);
-        m_robotDrive.arcadeDrive(0.0, pidOut);
-      }
-
-      break;
+    if (initialiser) {
+      //fakeahrs = new AHRS(SPI.Port.kMXP);
+      m_robotDrive.arcadeDrive(0.0, 0.0);
+      fakeahrs.reset();
+      anglemesure = fakeahrs.getYaw();
+      m_pidController = new PIDController(kP, kI, kD, 0.02);
+      m_pidController.setSetpoint(90.0);
+      pidOut = m_pidController.calculate(anglemesure);
+      initialiser = false;
+    }
+    if (m_pidController.atSetpoint()|anglemesure>89.5) {
+      m_robotDrive.arcadeDrive(0.0, 0.0);
+      step = Sequences.AVANCER_3;
+      initialiser = true;
+    } else {
+      pidOut = m_pidController.calculate(anglemesure);
+      m_robotDrive.arcadeDrive(0.0, pidOut);
+    }
 
     case AVANCER_3:
       if (initialiser) {
         m_test.setSelectedSensorPosition(0);
+        m_distance = m_test.getSelectedSensorPosition();
         initialiser = false;
       }
       if (m_distance > distanceautonome3) {
@@ -561,13 +581,17 @@ public class Robot extends TimedRobot {
       break;
 
     case FIN:
-
+    m_pidController.close();
+    m_test.set(0.0);
+    m_robotDrive.arcadeDrive(0.0, 0.0);
+    
     break;
     default:
 
       break;
 
     }
+    ///m_robotDrive.arcadeDrive(0.0, 0.0);
 
   } // fin de l'autonome
 

@@ -2,6 +2,8 @@ package frc.robot;
 
 //import com.ctre.phoenix.motorcontrol.can.BaseMotorController;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.ctre.phoenix.ErrorCode;
+
 
 public class FakeMotor extends WPI_TalonFX{
 
@@ -15,9 +17,19 @@ int FakePosition=0;
 
     @Override
     public int getSelectedSensorPosition() {
-        FakePosition = FakePosition+(int)(get()*1000);
+        FakePosition = FakePosition+(int)(get()*30000);
         return FakePosition;
 
     }
+
+    @Override
+    public ErrorCode setSelectedSensorPosition(int pos) {
+    FakePosition=pos;
+    return ErrorCode.OK;
+
+}
   
 }
+
+
+
