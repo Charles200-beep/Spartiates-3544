@@ -210,6 +210,7 @@ public class Robot extends TimedRobot {
 
     // -------------------------------------------
     // limit switches intake arm
+  
     double a = m_stick.getRawAxis(3);
     double b;
 
