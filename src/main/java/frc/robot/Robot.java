@@ -27,10 +27,17 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.Timer;
 
-enum Sequences {
-
+// Définir les sequences
+enum SequencesAutonome {
   AVANCER_1, TOURNER_1, TOURNER_2, AVANCER_2, VISER, LANCER, FIN, AVANCER_3;
+}
 
+enum SequencesLancer {
+  ACCELERER, OUVRIRPORTE, FERMERPORTE, VISER, ALIMENTER, FIN;
+}
+
+enum SequencesIntakeArm {
+  ACCELERER, BAISSER, MONTER, FIN;
 }
 
 // Définir les composantes
@@ -105,7 +112,7 @@ public class Robot extends TimedRobot {
   // Initialisation automatique
   boolean initialiser = true;
   double distance = 0.0;
-  Sequences step = Sequences.AVANCER_1;
+  SequencesAutonome step = SequencesAutonome.AVANCER_1;
   double m_distance;
   double anglemesure;
   double distanceautonome1 = 1128726;
@@ -468,7 +475,7 @@ public class Robot extends TimedRobot {
     // double anglemesure = ahrs.getYaw();
     // int index = 1;
 
-    // // Sequences TOURNERGAUCHE;
+    // // SequencesAutonome TOURNERGAUCHE;
 
     // switch (etape) {
 
@@ -546,7 +553,7 @@ public class Robot extends TimedRobot {
       }
       if (m_distance > distanceautonome1) {
         m_robotDrive.arcadeDrive(0.0, 0.0);
-        step = Sequences.TOURNER_1;
+        step = SequencesAutonome.TOURNER_1;
         initialiser = true;
       } else {
         // avancer
@@ -566,7 +573,7 @@ public class Robot extends TimedRobot {
       }
       if (m_pidController.atSetpoint()|anglemesure>89.5) { //  this condition may need to be removed
         m_robotDrive.arcadeDrive(0.0, 0.0);
-        step = Sequences.AVANCER_2;
+        step = SequencesAutonome.AVANCER_2;
         initialiser = true;
       } else {
         pidOut = m_pidController.calculate(anglemesure);
@@ -583,7 +590,7 @@ public class Robot extends TimedRobot {
       }
       if (m_distance > distanceautonome2) {
         m_robotDrive.arcadeDrive(0.0, 0.0);
-        step = Sequences.TOURNER_2;
+        step = SequencesAutonome.TOURNER_2;
         initialiser = true;
       } else {
         // avancer
@@ -605,7 +612,7 @@ public class Robot extends TimedRobot {
     }
     if (m_pidController.atSetpoint()|anglemesure>89.5) {
       m_robotDrive.arcadeDrive(0.0, 0.0);
-      step = Sequences.AVANCER_3;
+      step = SequencesAutonome.AVANCER_3;
       initialiser = true;
     } else {
       pidOut = m_pidController.calculate(anglemesure);
@@ -620,7 +627,7 @@ public class Robot extends TimedRobot {
       }
       if (m_distance > distanceautonome3) {
         m_robotDrive.arcadeDrive(0.0, 0.0);
-        step = Sequences.FIN;
+        step = SequencesAutonome.FIN;
         initialiser = true;
 
       } else {
