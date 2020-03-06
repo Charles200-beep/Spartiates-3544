@@ -56,12 +56,11 @@ public class Robot extends TimedRobot {
   private WPI_VictorSPX m_intakeRoller;
   private WPI_VictorSPX m_conveyorLow;
   private WPI_VictorSPX m_conveyorHigh;
-  private WPI_VictorSPX m_feederBall;
   private WPI_TalonSRX m_intakeArm;
   private WPI_TalonSRX m_shooter1;
   private WPI_TalonSRX m_shooter2;
-  private DigitalInput intakeArmLow;
-  private DigitalInput intakeArmHigh;
+  // private DigitalInput intakeArmLow;
+  // private DigitalInput intakeArmHigh;
   private DigitalInput rightClimbStop;
   private DigitalInput leftClimbStop;
   private DifferentialDrive m_robotDrive;
@@ -71,7 +70,7 @@ public class Robot extends TimedRobot {
   private AHRS ahrs;
   private Timer shooterSpoolUpTimer;
   private Timer unlockTimer;
-
+  private Timer timerShooter;
   // private FakeAHRS fakeahrs;
   // private static final double ratioGearboxRoues = 8.68;
   // private static final double diametreRoues = 15.24; // en centimetres
@@ -79,32 +78,9 @@ public class Robot extends TimedRobot {
 
   // Valeurs pour vitesses de moteurs
   private static final double vitesseConvoyeur = 0.7;
-  private static final double vitesseLanceur = 1.0;
-  private static final double vitesseGrimpeur = 0.7;
+  private static final double vitesseLanceur = 0.75;
   private static final double vitesseIntakeArm = 0.7;
-  private static final double vitesseFeeder = 0.7;
   private static final double vitesseSuivreBalle = 0.7;
-
-  // Boutons et axes de joystick XBOX Conducteur
-  private static final int axeConduireAvant = 0;
-  private static final int axeConduireTournerDroit = 5;
-  private static final int axeConduireTournerGauche = 4;
-  private static final int axeGrimpeurDroit = 0;
-  private static final int axeGrimpeurGauche = 0;
-  private static final int axeIntakeArm = 3;
-  private static final int boutonIntakeArmRaise = 0;
-  private static final int boutonIntakeArmlower = 0;
-  private static final int boutonLanceurToggle = 0;
-  private static final int boutonConvoyeurIn = 0;
-  private static final int boutonConvoyeurOut = 0;
-  private static final int boutonFeeder = 0;
-
-  // Boutons et axes de joystick Pilote 2
-  private static final int boutonGrimpGaucheUp = 6;
-  private static final int boutonGrimpGaucheDown = 7;
-  private static final int boutonGrimpDroiteUp = 10;
-  private static final int boutonGrimpDroiteDown = 11;
-  private static final int boutonIntakeRoller = 3;
 
   // Gains
   private static final double kP_SuivreBalle = 0.04;
@@ -173,8 +149,6 @@ public class Robot extends TimedRobot {
     m_intakeArm = new WPI_TalonSRX(11);
     m_shooter1 = new WPI_TalonSRX(12);
     m_shooter2 = new WPI_TalonSRX(13);
-    intakeArmLow = new DigitalInput(0);
-    intakeArmHigh = new DigitalInput(1);
     rightClimbStop = new DigitalInput(2);
     leftClimbStop = new DigitalInput(3);
     feederhigh = new DigitalInput(4);
@@ -184,6 +158,7 @@ public class Robot extends TimedRobot {
     m_leftClimbRatchet = new Servo(1);
     m_stick2 = new Joystick(1);
     shooterSpoolUpTimer = new Timer();
+    timerShooter = new Timer();
     // m_lanceur = new WPI_TalonFX(-1);// changer
     m_robotDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
     m_stick = new Joystick(0);
@@ -202,6 +177,7 @@ public class Robot extends TimedRobot {
     m_conveyorHigh.follow(m_conveyorLow);
     shooterSpoolUpTimer.start();
     unlockTimer.start();
+    timerShooter.start();
     m_rightClimb.setInverted(true);
     m_conveyorHigh.setInverted(true);
     // TalonFX Configuration
@@ -209,7 +185,6 @@ public class Robot extends TimedRobot {
     m_rightMotor.configOpenloopRamp(0.5);
     m_leftMotor2.configOpenloopRamp(0.5);
     m_rightMotor2.configOpenloopRamp(0.5);
-
     // Initialiser Servo Ratchets Grimpeur
     m_rightClimbRatchet.setAngle(rightClimbRatchetLocked);
     m_leftClimbRatchet.setAngle(leftClimbRatchetLocked);
@@ -220,24 +195,24 @@ public class Robot extends TimedRobot {
   // Méthodes
 
   // Allumer le compresseur
-  public void allumerCompresseur() {
-    c.start();
-  }
+  // public void allumerCompresseur() {
+  // c.start();
+  // }
 
   // Fermer le compresseur
-  public void fermerCompresseur() {
-    c.stop();
-  }
+  // public void fermerCompresseur() {
+  // c.stop();
+  // }
 
   // Refroidir les moteurs si + que 40 degrés
-  public void refroidirMoteurs(double m_temperature) {
-    // changer pour modifier le maximum de temperature
-    if (m_temperature > 40) {
-      c.start();
-    } else {
-      c.stop();
-    }
-  }
+  // public void refroidirMoteurs(double m_temperature) {
+  // // changer pour modifier le maximum de temperature
+  // if (m_temperature > 40) {
+  // c.start();
+  // } else {
+  // c.stop();
+  // }
+  // }
 
   // // Lancer
   // public void lancer() {
@@ -250,6 +225,18 @@ public class Robot extends TimedRobot {
   // m_lanceur.set(0.0);
   // }
   // }
+  public void pipelineballe() {
+    NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(0);
+  }
+
+  public void pipelinecible() {
+    NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(1);
+
+  }
+
+  public void pipelinevision() {
+    NetworkTableInstance.getDefault().getTable("limelight").getEntry("camMode").setNumber(1);
+  }
 
   public void suivreBalle(double x) {
     m_robotDrive.arcadeDrive(-vitesseSuivreBalle, -x * kP_SuivreBalle);
@@ -266,7 +253,7 @@ public class Robot extends TimedRobot {
     double leftTrigger = m_stick.getRawAxis(2);
     double rightTrigger = m_stick.getRawAxis(3);
     double rotation = rightTrigger - leftTrigger;
-    m_robotDrive.arcadeDrive(-m_stick.getY(), rotation);
+    m_robotDrive.arcadeDrive(-m_stick.getY() * 0.75, rotation * 0.75);
 
     // if (leftTrigger > -0.9 ) {
     // m_robotDrive.arcadeDrive(0, -leftTrigger);
@@ -278,14 +265,13 @@ public class Robot extends TimedRobot {
 
     // -------------------------------------------
     // détecter la chaleur des moteurs
-    double m_temperature = m_leftMotor.getTemperature();
-    refroidirMoteurs(m_temperature);
-    SmartDashboard.putNumber("m_temperature", m_temperature);
+    // double m_temperature = m_leftMotor.getTemperature();
+    // refroidirMoteurs(m_temperature);
+    // SmartDashboard.putNumber("m_temperature", m_temperature);
 
-    // Lire les données du limelight
-    double x = tx.getDouble(0.0);
-    double y = ty.getDouble(0.0);
-    double area = ta.getDouble(0.0);
+    // // Lire les données du limelightH
+    // double y = ty.getDouble(0.0
+    // double area = ta.getDouble(0.0);
 
     // -------------------------------------------
     // // limit switches intake arm
@@ -305,22 +291,19 @@ public class Robot extends TimedRobot {
 
     // m_intakeArm.set(b);
 
-    // --------------------------------------------
-    // Intake arm
-    double Z = m_stick2.getRawAxis(2);
-    double intakeArmPos = m_intakeArm.getSelectedSensorPosition();
-    if (Z == 1) {
-      m_intakeArm.set(0.2);
-      // if (intakeArmPos > ) {
+    // // --------------------------------------------
+    // // Intake arm
+    // double intakeArmPos = m_intakeArm.getSelectedSensorPosition();
+    // if (m_stick2.getRawAxis(2) > -0.5) {
+    // m_intakeArm.set(vitesseIntakeArm);
 
-      // }
-    }
+    // }
 
-    if (Z == -1) {
-      m_intakeArm.set(-0.2);
-    }
+    // if (m_stick2.getRawAxis(2) > 0.5) {
+    // m_intakeArm.set(-vitesseIntakeArm);
+    // }
 
-    SmartDashboard.putNumber("Z", intakeArmPos);
+    // SmartDashboard.putNumber("Z", intakeArmPos);
     // Intake Roller
     if (m_stick2.getRawButton(3)) {
       m_intakeRoller.set(-0.7);
@@ -359,36 +342,46 @@ public class Robot extends TimedRobot {
     // }
     // m_rightClimb.set(f);
     // ----------------------------------------------
-    if (m_stick2.getRawButtonPressed(1)) {
-      shoot = !shoot;
-      shooterSpoolUpTimer.reset();
-    }
+    // if (m_stick2.getRawButtonPressed(1)) {
+    // shoot = !shoot;
+    // shooterSpoolUpTimer.reset();
+    // }
 
     // shooter
-    if (shoot) {
-      m_shooter1.set(vitesseLanceur);
-      m_shooter2.follow(m_shooter1);
+    // if (shoot) {
+    // m_shooter1.set(vitesseLanceur);
+    // m_shooter2.follow(m_shooter1);
+    // if (shooterSpoolUpTimer.get() > 6) {
+    // // shooterSpoolUpTimer.stop();
+    // m_conveyorHigh.set(vitesseConvoyeur);
+    // m_conveyorLow.follow(m_conveyorHigh);
+    // }
 
-      if (shooterSpoolUpTimer.get() > 6) {
-        // shooterSpoolUpTimer.stop();
-        m_conveyorHigh.set(vitesseConvoyeur);
-        m_conveyorLow.follow(m_conveyorHigh);
-      }
+    // }
 
-    }
     // System.out.println(shoot);
     // System.out.println("convoyeur:");
     // System.out.println(m_conveyorHigh.get());
     // System.out.println("shooter:");
     // System.out.println(m_shooter1.get());
 
-    if (!shoot) {
-      m_conveyorHigh.set(0.0);
-      m_conveyorLow.follow(m_conveyorHigh);
-      m_shooter1.set(0.0);
-      m_shooter2.follow(m_shooter1);
+    // if (!shoot) {
+    // m_conveyorHigh.set(0.0);
+    // m_conveyorLow.follow(m_conveyorHigh);
+    // m_shooter1.set(0.0);
+    // m_shooter2.follow(m_shooter1);
 
+    // Shooter 2.0
+    if (m_stick2.getRawButton(1)) {
+      m_shooter1.set(vitesseLanceur);
+      m_shooter2.follow(m_shooter1);
     }
+    if (m_stick2.getRawButtonReleased(1)) {
+      m_shooter1.set(0);
+    }
+    SmartDashboard.putBoolean("Shooter", m_stick2.getRawButton(1));
+      //
+    // }
     // DPAD
     // if (direction == 0) {
 
@@ -439,9 +432,9 @@ public class Robot extends TimedRobot {
     if (m_stick2.getRawButton(2)) {
       m_conveyorHigh.set(vitesseConvoyeur);
     }
+    if (m_stick2.getRawButtonReleased(2)) {
+      m_conveyorHigh.set(0);
 
-    if (m_stick2.getRawButton(5)) {
-      m_conveyorHigh.set(-vitesseConvoyeur);
     }
     // -----------------------------------------------------
     // unlock ratchets
@@ -453,42 +446,34 @@ public class Robot extends TimedRobot {
       m_rightClimbRatchet.setAngle(rightClimbRatchetUnLocked);
 
     }
-      // unlock ratchets
-      if (m_stick2.getRawButton(9)) {
-        m_leftClimbRatchet.setAngle(leftClimbRatchetLocked);
-  
-      }
-      if (m_stick2.getRawButton(9)) {
-        m_rightClimbRatchet.setAngle(rightClimbRatchetLocked);
-  
-      }
-    //monter gauche
+    // unlock ratchets
+    if (m_stick2.getRawButton(9)) {
+      m_leftClimbRatchet.setAngle(leftClimbRatchetLocked);
+
+    }
+    if (m_stick2.getRawButton(9)) {
+      m_rightClimbRatchet.setAngle(rightClimbRatchetLocked);
+
+    }
+    //for noob if not put this in comment
+
+    m_rightClimb.follow(m_leftClimb);
+    // monter 
     if (m_stick2.getRawButton(6)) {
-      m_leftClimb.set(-1);
-  
+      m_leftClimb.set(-0.5);
+
     }
     if (m_stick2.getRawButtonReleased(6))
-    m_leftClimb.set(0);
-     // Baisser gauche
-     if (m_stick2.getRawButton(7)) {
+      m_leftClimb.set(0);
+    // Baisser 
+    if (m_stick2.getRawButton(7)) {
       m_leftClimb.set(1);
     }
     if (m_stick2.getRawButtonReleased(7))
-    m_leftClimb.set(0);
-  
-    // Monter droite
-    if (m_stick2.getRawButton(11)) {
-      m_rightClimb.set(-1);
-    } 
-    if (m_stick2.getRawButtonReleased(11))
-    m_rightClimb.set(0);
-    // Baisser droite
-    if (m_stick2.getRawButton(10)) {
-      m_rightClimb.set(1);
-    
-    }
-    if (m_stick2.getRawButtonReleased(10))
-    m_rightClimb.set(0);
+      m_leftClimb.set(0);
+
+
+   
 
     // Lire et publier la vitesse des shooters
     double vitesseShooters = m_shooter1.get();
@@ -500,18 +485,19 @@ public class Robot extends TimedRobot {
 
     // Lire les données du navX
     double anglemesure = ahrs.getYaw();
+    double x = ahrs.getYaw();
 
     // double pidOut2 = m_pidController2.calculate(anglemesure);
     double pidOut = m_pidController.calculate(anglemesure);
 
     // Allumer les compresseur
-    if (m_stick.getRawButton(10)) {
-      allumerCompresseur();
-    } else {
-      fermerCompresseur();
-    }
+    // if (m_stick.getRawButton(10)) {
+    // allumerCompresseur();
+    // } else {
+    // fermerCompresseur();
+    // }
 
-    // Lancer
+    // Lance r
     // if (m_stick.getRawButton(6))
     // lancer();
 
@@ -521,6 +507,7 @@ public class Robot extends TimedRobot {
 
     // SmartDashboard.putNumber("pidOut2", pidOut2);
 
+    ;
     // Système de controle automatique
     if (m_stick.getRawButton(1))
       suivreBalle(x);
@@ -537,26 +524,15 @@ public class Robot extends TimedRobot {
 
     if (m_stick.getRawButton(5) | m_stick.getRawButton(6)) {
       m_robotDrive.arcadeDrive(0.0, pidOut);
-    } 
+    }
 
-                    // if (m_stick.getRawButton(4)) {
-                    // m_robotDrive.arcadeDrive(-0.7, pidOut2);
-
-                    // if (m_stick.getRawButton(7) & m_stick.getRawButton(8)) {
-                    // m_test.setSelectedSensorPosition(0);
-
-                    // }
-      // lime light 
-      jas;
-
-
-
+    SmartDashboard.putNumber("vitesse shooter", m_shooter1.getSelectedSensorVelocity());
 
   }// Fin du teleop.periodic
 
   @Override
   public void autonomousInit() {
-    // fakeahrs = new FakeAHRS(SPI.Port.kMXP); 
+    // fakeahrs = new FakeAHRS(SPI.Port.kMXP);
     // fakeahrs.YawMotors(m_leftMotor, m_rightMotor);
     // double pidOut;
   } // fin de autonomousInit
@@ -566,7 +542,6 @@ public class Robot extends TimedRobot {
 
     m_distance = m_leftMotor.getSelectedSensorPosition();
     anglemesure = ahrs.getYaw();
-    double pidOut;
 
     // // partie autonome
     // double m_distance = m_test.getSelectedSensorPosition();
@@ -778,23 +753,55 @@ public class Robot extends TimedRobot {
     initialiser = true;
     switch (step3) {
     case AVANCER_1:
-      if (initialiser) {
-        m_leftMotor.setSelectedSensorPosition(0);
-        m_distance = m_leftMotor.getSelectedSensorPosition();
-        initialiser = false;
-      }
-      if (m_distance > 41584) {
-        m_robotDrive.arcadeDrive(0.0, 0.0);
+    if (initialiser) {
+    m_leftMotor.setSelectedSensorPosition(0);
+    m_distance = m_leftMotor.getSelectedSensorPosition();
+    initialiser = false;
+    }
+    if (m_distance > 20500) {
+    m_robotDrive.arcadeDrive(0.0, 0.0);
 
-      } else {
-        m_robotDrive.arcadeDrive(0.5, 0.0);
-      }
+    } else {
+    m_robotDrive.arcadeDrive(0.5, 0.0);
+    }
 
-      break;
+    break;
 
     default:
-      break;
+    break;
     }
+
+    // Quatrieme routine
+    // int step4 = 1;
+    // switch (step4) {
+    // case 1:
+    //   if (initialiser) {
+    //     m_leftMotor.setSelectedSensorPosition(0);
+    //     initialiser = false;
+    //   }
+    //   if (m_distance > 37130) {
+    //     m_robotDrive.arcadeDrive(0.0, 0.0);
+    //     step4 = 2;
+    //   } else {
+    //     m_robotDrive.arcadeDrive(0.5, 0.0);
+    //   }
+    //   break;
+
+    // case 2:
+    //   m_shooter1.set(1);
+    //   timerShooter.reset();
+    //   if (timerShooter.get() > 5) {
+    //     m_conveyorHigh.set(0.5);
+    //     timerShooter.reset();
+    //   }
+    //   if (timerShooter.get() > 8) {
+    //     m_shooter1.set(0.0);
+    //     m_conveyorHigh.set(0.0);
+    //     timerShooter.stop();
+    //   }
+    // default:
+    //   break;
+    // }
 
   } // fin de l'autonome
 
