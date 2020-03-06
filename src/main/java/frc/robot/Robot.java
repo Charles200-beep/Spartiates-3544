@@ -539,19 +539,24 @@ public class Robot extends TimedRobot {
       m_robotDrive.arcadeDrive(0.0, pidOut);
     } 
 
-    // if (m_stick.getRawButton(4)) {
-    // m_robotDrive.arcadeDrive(-0.7, pidOut2);
+                    // if (m_stick.getRawButton(4)) {
+                    // m_robotDrive.arcadeDrive(-0.7, pidOut2);
 
-    // if (m_stick.getRawButton(7) & m_stick.getRawButton(8)) {
-    // m_test.setSelectedSensorPosition(0);
+                    // if (m_stick.getRawButton(7) & m_stick.getRawButton(8)) {
+                    // m_test.setSelectedSensorPosition(0);
 
-    // }
+                    // }
+      // lime light 
+      jas;
+
+
+
 
   }// Fin du teleop.periodic
 
   @Override
   public void autonomousInit() {
-    // fakeahrs = new FakeAHRS(SPI.Port.kMXP);
+    // fakeahrs = new FakeAHRS(SPI.Port.kMXP); 
     // fakeahrs.YawMotors(m_leftMotor, m_rightMotor);
     // double pidOut;
   } // fin de autonomousInit
