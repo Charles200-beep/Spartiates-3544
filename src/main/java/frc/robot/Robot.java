@@ -94,6 +94,10 @@ public class Robot extends TimedRobot {
   private static final double leftClimbRatchetLocked = 180.0;
   private static final double leftClimbRatchetUnLocked = 90.0;
 
+  //Limites et autres Valeurs
+  private static final int intakeArmHighPos = 999999;
+  private static final int intakeArmLowPos = -999999;
+
   // Initialisation automatique
   boolean initialiser = true;
   double distance = 0.0;
@@ -255,121 +259,40 @@ public class Robot extends TimedRobot {
     double rotation = rightTrigger - leftTrigger;
     m_robotDrive.arcadeDrive(-m_stick.getY() * 0.75, rotation * 0.75);
 
-    // if (leftTrigger > -0.9 ) {
-    // m_robotDrive.arcadeDrive(0, -leftTrigger);
-    // }
-
-    // if (rightTrigger > -0.9 ) {
-    // m_robotDrive.arcadeDrive(0, -rightTrigger);
-    // }
-
-    // -------------------------------------------
-    // détecter la chaleur des moteurs
-    // double m_temperature = m_leftMotor.getTemperature();
-    // refroidirMoteurs(m_temperature);
-    // SmartDashboard.putNumber("m_temperature", m_temperature);
-
-    // // Lire les données du limelightH
-    // double y = ty.getDouble(0.0
-    // double area = ta.getDouble(0.0);
-
-    // -------------------------------------------
-    // // limit switches intake arm
-
-    // double a = m_stick.getRawAxis(3);
-    // double b;
-
-    // if (a < 0.0 & intakeArmLow.get() == true) {
-    // b = 0.0;
-    // } else {
-    // if (a > 0.0 & intakeArmHigh.get() == true) {
-    // b = 0.0;
-    // } else {
-    // b = a;
-    // }
-    // }
-
-    // m_intakeArm.set(b);
-
+        // Lire et publier la vitesse des shooters
+        double vitesseShooters = m_shooter1.getSelectedSensorVelocity();
+        SmartDashboard.putNumber("vitesse Shooters", vitesseShooters);
+    
+        // Lire et publier la position de intake arm
+        double positionIntakeArm = m_intakeArm.getSelectedSensorPosition();
+        SmartDashboard.putNumber("position Intake Arm", positionIntakeArm);
+        
+        // Lire les données du navX
+        double anglemesure = ahrs.getYaw();
+        double x = ahrs.getYaw();
+    
+        // double pidOut2 = m_pidController2.calculate(anglemesure);
+        double pidOut = m_pidController.calculate(anglemesure);
+  
     // // --------------------------------------------
-    // // Intake arm
-    // double intakeArmPos = m_intakeArm.getSelectedSensorPosition();
-    // if (m_stick2.getRawAxis(2) > -0.5) {
-    // m_intakeArm.set(vitesseIntakeArm);
+    double intakeArmJoystickCommand = m_stick2.getRawAxis(2);
+   if (intakeArmJoystickCommand > 0.5 & positionIntakeArm < intakeArmHighPos) {
+      m_intakeArm.set(vitesseIntakeArm);
+    }
+    else if (intakeArmJoystickCommand < -0.5 & positionIntakeArm > intakeArmLowPos) {
+      m_intakeArm.set(-vitesseIntakeArm);
+    }
+    else {
+      m_intakeArm.set(0.0);
+    }
 
-    // }
 
-    // if (m_stick2.getRawAxis(2) > 0.5) {
-    // m_intakeArm.set(-vitesseIntakeArm);
-    // }
-
-    // SmartDashboard.putNumber("Z", intakeArmPos);
     // Intake Roller
     if (m_stick2.getRawButton(3)) {
       m_intakeRoller.set(-0.7);
     } else {
       m_intakeRoller.set(0.0);
     }
-
-    // -------------------------------------------
-    // limit switches climb
-    // double z = m_stick.getRawAxis(3);
-    // double d;
-    // if (z < 0.0 & leftClimbStop.get() == true) {
-    // d = 0.0;
-    // } else {
-    // if (z > 0.0 & leftClimbStop.get() == true) {
-    // d = 0.0;
-    // } else {
-    // d = z;
-    // }
-    // }
-
-    // m_leftClimb.set(d);
-
-    // --------------------------------------------
-    // // limit switches climb
-    // double e = m_stick.getRawAxis(3);
-    // double f;
-    // if (e < 0.0 & rightClimbStop.get() == true) {
-    // f = 0.0;
-    // } else {
-    // if (e > 0.0 & rightClimbStop.get() == true) {
-    // f = 0.0;
-    // } else {
-    // f = e;
-    // }
-    // }
-    // m_rightClimb.set(f);
-    // ----------------------------------------------
-    // if (m_stick2.getRawButtonPressed(1)) {
-    // shoot = !shoot;
-    // shooterSpoolUpTimer.reset();
-    // }
-
-    // shooter
-    // if (shoot) {
-    // m_shooter1.set(vitesseLanceur);
-    // m_shooter2.follow(m_shooter1);
-    // if (shooterSpoolUpTimer.get() > 6) {
-    // // shooterSpoolUpTimer.stop();
-    // m_conveyorHigh.set(vitesseConvoyeur);
-    // m_conveyorLow.follow(m_conveyorHigh);
-    // }
-
-    // }
-
-    // System.out.println(shoot);
-    // System.out.println("convoyeur:");
-    // System.out.println(m_conveyorHigh.get());
-    // System.out.println("shooter:");
-    // System.out.println(m_shooter1.get());
-
-    // if (!shoot) {
-    // m_conveyorHigh.set(0.0);
-    // m_conveyorLow.follow(m_conveyorHigh);
-    // m_shooter1.set(0.0);
-    // m_shooter2.follow(m_shooter1);
 
     // Shooter 2.0
     if (m_stick2.getRawButton(1)) {
@@ -380,50 +303,8 @@ public class Robot extends TimedRobot {
       m_shooter1.set(0);
     }
     SmartDashboard.putBoolean("Shooter", m_stick2.getRawButton(1));
-      //
-    // }
-    // DPAD
-    // if (direction == 0) {
+ 
 
-    // }
-    // ---------------------------------------------------
-    // mini servo
-
-    // SmartDashboard.putNumber("angle", angle);
-    // m_leftClimbRatchet.setAngle(angle);
-    // if (m_stick.getRawButtonReleased(null)) {
-    // angle = angle+10;
-    // }
-    // if (m_stick.getRawButtonReleased(null)) {
-    // angle = angle-10;
-
-    // }
-    // if (m_stick.getRawButtonReleased(null)) {
-    // m_leftClimbRatchet.setAngle(0);
-
-    // if (m_stick.getRawButtonReleased(null)) {
-    // m_leftClimbRatchet.setAngle(90);
-
-    // }
-
-    // }
-    // m_rightClimbRatchet.setAngle(angle);
-    // if (m_stick.getRawButtonReleased(null)) {
-    // angle = angle+10;
-    // }
-    // if (m_stick.getRawButtonReleased(null)) {
-    // angle = angle-10;
-
-    // }
-    // if (m_stick.getRawButtonReleased(null)) {
-    // m_rightClimbRatchet.setAngle(0);
-
-    // if (m_stick.getRawButtonReleased(null)) {
-    // m_rightClimbRatchet.setAngle(90);
-
-    // }
-
-    // }
 
     // ----------------------------------------------------
     // conveyor (feeder)
@@ -477,20 +358,7 @@ public class Robot extends TimedRobot {
 
    
 
-    // Lire et publier la vitesse des shooters
-    double vitesseShooters = m_shooter1.get();
-    SmartDashboard.putNumber("vitesse Shooters", vitesseShooters);
 
-    // Lire et publier la position de intake arm
-    double positionIntakeArm = m_intakeArm.getSelectedSensorPosition();
-    SmartDashboard.putNumber("position Intake Arm", positionIntakeArm);
-
-    // Lire les données du navX
-    double anglemesure = ahrs.getYaw();
-    double x = ahrs.getYaw();
-
-    // double pidOut2 = m_pidController2.calculate(anglemesure);
-    double pidOut = m_pidController.calculate(anglemesure);
 
     // Allumer les compresseur
     // if (m_stick.getRawButton(10)) {
@@ -528,7 +396,7 @@ public class Robot extends TimedRobot {
       m_robotDrive.arcadeDrive(0.0, pidOut);
     }
 
-    SmartDashboard.putNumber("vitesse shooter", m_shooter1.getSelectedSensorVelocity());
+    
 
   }// Fin du teleop.periodic
 
